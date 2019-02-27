@@ -60,13 +60,13 @@
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}字</span>
         </el-form-item>
 
-        <div class="editor-container">
+        <el-form-item prop="content" style="margin-bottom: 30px;">
           <Tinymce ref="editor" :height="400" v-model="postForm.content" />
-        </div>
+        </el-form-item>
 
-        <div style="margin-bottom: 20px;">
+        <el-form-item prop="image_uri" style="margin-bottom: 30px;">
           <Upload v-model="postForm.image_uri" />
-        </div>
+        </el-form-item>
       </div>
     </el-form>
 
@@ -78,7 +78,7 @@ import Tinymce from '@/components/Tinymce'
 import Upload from '@/components/Upload/singleImage3'
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
-import { validateURL } from '@/utils/validate'
+import { validURL } from '@/utils/validate'
 import { fetchArticle } from '@/api/article'
 import { userSearch } from '@/api/remoteSearch'
 import Warning from './Warning'
@@ -121,7 +121,7 @@ export default {
     }
     const validateSourceUri = (rule, value, callback) => {
       if (value) {
-        if (validateURL(value)) {
+        if (validURL(value)) {
           callback()
         } else {
           this.$message({
@@ -143,7 +143,8 @@ export default {
         title: [{ validator: validateRequire }],
         content: [{ validator: validateRequire }],
         source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
-      }
+      },
+      tempRoute: {}
     }
   },
   computed: {
@@ -161,6 +162,11 @@ export default {
     } else {
       this.postForm = Object.assign({}, defaultForm)
     }
+
+    // Why need to make a copy of this.$route here?
+    // Because if you enter this page and quickly switch tag, may be in the execution of the setTagsViewTitle function, this.$route is no longer pointing to the current page
+    // https://github.com/PanJiaChen/vue-element-admin/issues/1221
+    this.tempRoute = Object.assign({}, this.$route)
   },
   methods: {
     fetchData(id) {
@@ -178,7 +184,7 @@ export default {
     },
     setTagsViewTitle() {
       const title = this.lang === 'zh' ? '编辑文章' : 'Edit Article'
-      const route = Object.assign({}, this.$route, { title: `${title}-${this.postForm.id}` })
+      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.id}` })
       this.$store.dispatch('updateVisitedView', route)
     },
     submitForm() {
@@ -228,7 +234,7 @@ export default {
 </script>
 
 <style rel="stylesheet/scss" lang="scss" scoped>
-@import "src/styles/mixin.scss";
+@import "~@/styles/mixin.scss";
 .createPost-container {
   position: relative;
   .createPost-main-container {
@@ -239,17 +245,6 @@ export default {
       margin-bottom: 10px;
       .postInfo-container-item {
         float: left;
-      }
-    }
-    .editor-container {
-      min-height: 500px;
-      margin: 0 0 30px;
-      .editor-upload-btn-container {
-        text-align: right;
-        margin-right: 10px;
-        .editor-upload-btn {
-          display: inline-block;
-        }
       }
     }
   }

@@ -3,9 +3,11 @@
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar class="sidebar-container"/>
     <div class="main-container">
-      <navbar/>
-      <tags-view/>
-      <app-main/>
+      <div class="fixed-top-bar">
+        <navbar/>
+        <tags-view/>
+      </div>
+      <app-main style="padding-top: 84px"/>
     </div>
   </div>
 </template>
@@ -49,6 +51,12 @@ export default {
 
 <style rel="stylesheet/scss" lang="scss" scoped>
   @import "~@/styles/mixin.scss";
+  .fixed-top-bar {
+    position: fixed;
+    width: calc(100% - 180px);
+    z-index: 9;
+    background: #fff;
+  }
   .app-wrapper {
     @include clearfix;
     position: relative;

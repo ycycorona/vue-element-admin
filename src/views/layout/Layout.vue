@@ -3,16 +3,17 @@
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar class="sidebar-container"/>
     <div class="main-container">
-      <div class="fixed-top-bar">
+      <div :class="{'fixed-top-bar': headerBarFix}">
         <navbar/>
         <tags-view/>
       </div>
-      <app-main style="padding-top: 84px"/>
+      <app-main :class="{'fixed-top-padding': headerBarFix}"/>
     </div>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { Navbar, Sidebar, AppMain, TagsView } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 
@@ -25,7 +26,15 @@ export default {
     TagsView
   },
   mixins: [ResizeMixin],
+  data() {
+    return {
+      isFixHeader: true
+    }
+  },
   computed: {
+    ...mapGetters([
+      'headerBarFix'
+    ]),
     sidebar() {
       return this.$store.state.app.sidebar
     },
@@ -51,6 +60,9 @@ export default {
 
 <style rel="stylesheet/scss" lang="scss" scoped>
   @import "~@/styles/mixin.scss";
+  .fixed-top-padding {
+    padding-top: 84px
+  }
   .fixed-top-bar {
     position: fixed;
     width: calc(100% - 180px);

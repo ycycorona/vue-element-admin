@@ -8,7 +8,8 @@ const app = {
     },
     device: 'desktop',
     language: Cookies.get('language') || 'en',
-    size: Cookies.get('size') || 'medium'
+    size: Cookies.get('size') || 'medium',
+    headerBarFix: true
   },
   mutations: {
     TOGGLE_SIDEBAR: state => {
@@ -35,6 +36,9 @@ const app = {
     SET_SIZE: (state, size) => {
       state.size = size
       Cookies.set('size', size)
+    },
+    TOGGLE_HEADER_BAR_FIX: state => {
+      state.headerBarFix = !state.headerBarFix
     }
   },
   actions: {
@@ -52,6 +56,9 @@ const app = {
     },
     setSize({ commit }, size) {
       commit('SET_SIZE', size)
+    },
+    toggleHeaderBarFix({ commit }) {
+      commit('TOGGLE_HEADER_BAR_FIX')
     }
   }
 }

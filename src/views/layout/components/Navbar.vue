@@ -21,6 +21,7 @@
         <el-tooltip :content="$t('navbar.theme')" effect="dark" placement="bottom">
           <theme-picker class="right-menu-item hover-effect"/>
         </el-tooltip>
+        <setting-menu class="right-menu-item hover-effect"/>
       </template>
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
@@ -58,6 +59,7 @@ import SizeSelect from '@/components/SizeSelect'
 import LangSelect from '@/components/LangSelect'
 import ThemePicker from '@/components/ThemePicker'
 import Search from '@/components/HeaderSearch'
+import SettingMenu from '@/components/SettingMenu'
 
 export default {
   components: {
@@ -68,7 +70,8 @@ export default {
     SizeSelect,
     LangSelect,
     ThemePicker,
-    Search
+    Search,
+    SettingMenu
   },
   computed: {
     ...mapGetters([

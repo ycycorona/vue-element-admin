@@ -1,8 +1,9 @@
 import request from '@/utils/request'
+const mockPrefix = '/mock'
 
 export function fetchList(query) {
   return request({
-    url: '/article/list',
+    url: mockPrefix + '/article/list',
     method: 'get',
     params: query
   })
@@ -10,7 +11,7 @@ export function fetchList(query) {
 
 export function fetchArticle(id) {
   return request({
-    url: '/article/detail',
+    url: mockPrefix + '/article/detail',
     method: 'get',
     params: { id }
   })
@@ -18,7 +19,7 @@ export function fetchArticle(id) {
 
 export function fetchPv(pv) {
   return request({
-    url: '/article/pv',
+    url: mockPrefix + '/article/pv',
     method: 'get',
     params: { pv }
   })
@@ -26,7 +27,7 @@ export function fetchPv(pv) {
 
 export function createArticle(data) {
   return request({
-    url: '/article/create',
+    url: mockPrefix + '/article/create',
     method: 'post',
     data
   })
@@ -34,7 +35,7 @@ export function createArticle(data) {
 
 export function updateArticle(data) {
   return request({
-    url: '/article/update',
+    url: mockPrefix + '/article/update',
     method: 'post',
     data
   })

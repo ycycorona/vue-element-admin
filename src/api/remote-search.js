@@ -1,8 +1,9 @@
 import request from '@/utils/request'
+const mockPrefix = '/mock'
 
 export function searchUser(name) {
   return request({
-    url: '/search/user',
+    url: mockPrefix + '/search/user',
     method: 'get',
     params: { name }
   })
@@ -10,7 +11,7 @@ export function searchUser(name) {
 
 export function transactionList(query) {
   return request({
-    url: '/transaction/list',
+    url: mockPrefix + '/transaction/list',
     method: 'get',
     params: query
   })

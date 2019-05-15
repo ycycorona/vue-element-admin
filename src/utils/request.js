@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { MessageBox, Message } from 'element-ui'
+import { /* MessageBox, */ Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 
@@ -43,33 +43,53 @@ service.interceptors.response.use(
    * You can also judge the status by HTTP Status Code
    */
   response => {
-    const res = response.data
-
-    // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 20000) {
-      Message({
-        message: res.message || 'error',
-        type: 'error',
-        duration: 5 * 1000
-      })
-
-      // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
-      if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-        // to re-login
-        MessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
-          confirmButtonText: 'Re-Login',
-          cancelButtonText: 'Cancel',
-          type: 'warning'
-        }).then(() => {
-          store.dispatch('user/resetToken').then(() => {
-            location.reload()
-          })
-        })
-      }
-      return Promise.reject(res.message || 'error')
+    // dataAxios 是 axios 返回数据中的 data
+    const dataAxios = response.data
+    // 这个状态码是和后端约定的
+    const code = dataAxios.status
+    // 根据 code 进行判断
+    if (code === undefined) {
+      // 如果没有 code 代表这不是项目后端开发的接口 比如可能是 D2Admin 请求最新版本
+      return dataAxios
     } else {
-      return res
+      // 有 code 代表这是一个后端接口 可以进行进一步的判断
+      switch (code) {
+        case 0:
+          // [ 示例 ] code === 0 代表没有错误
+          return dataAxios
+        case 99:
+          // [ 示例 ] 其它和后台约定的 code
+          Message({
+            message: `[ status: 99 ] reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
+            type: 'error',
+            duration: 5 * 1000
+          })
+          break
+        default:
+          // 不是正确的 code
+          Message({
+            message: `reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
+            type: 'error',
+            duration: 5 * 1000
+          })
+          break
+      }
     }
+
+    // // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
+    // if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
+    //   // to re-login
+    //   MessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
+    //     confirmButtonText: 'Re-Login',
+    //     cancelButtonText: 'Cancel',
+    //     type: 'warning'
+    //   }).then(() => {
+    //     store.dispatch('user/resetToken').then(() => {
+    //       location.reload()
+    //     })
+    //   })
+    // }
+    // return Promise.reject(res.message || 'error')
   },
   error => {
     console.log('err' + error) // for debug

@@ -97,8 +97,8 @@ export default {
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: 'wwq',
+        password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -156,19 +156,21 @@ export default {
       })
     },
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
+      this.$refs.loginForm.validate(async valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/' })
-              this.loading = false
-            })
-            .catch(() => {
-              this.loading = false
-            })
+          try {
+            await this.$store.dispatch('user/login', this.loginForm)
+            await this.$store.dispatch('light/reqCommonData')
+          } catch (err) {
+            this.loading = false
+            return
+          }
+
+          this.$router.push({ path: this.redirect || '/' })
+          this.loading = false
         } else {
-          console.log('error submit!!')
+          console.log('用户名密码校验失败')
           return false
         }
       })

@@ -36,11 +36,37 @@ module.exports = {
     proxy: {
       // change xxx-api/login => mock/login
       // detail: https://cli.vuejs.org/config/#devserver-proxy
-      [process.env.VUE_APP_BASE_API]: {
+      '/light2/api': {
+        target: `http://127.0.0.1:8080`,
+        changeOrigin: true,
+        pathRewrite: {
+          //'^/api': '/api'
+        },
+        // onProxyRes: function(proxyRes, req, res) {
+        //   var cookies = proxyRes.headers['set-cookie'];
+        //   var cookieRegex = /Path=\/XXX\//i;
+        //   //修改cookie Path
+        //   if (cookies) {
+        //     var newCookie = cookies.map(function(cookie) {
+        //       if (cookieRegex.test(cookie)) {
+        //         return cookie.replace(cookieRegex, 'Path=/');
+        //       }
+        //       return cookie;
+        //     });
+        //     //修改cookie path
+        //     delete proxyRes.headers['set-cookie'];
+        //     proxyRes.headers['set-cookie'] = newCookie;
+        //   }
+        // }
+      },
+      '/light2/mock': {
         target: `http://localhost:${port}/mock`,
         changeOrigin: true,
         pathRewrite: {
-          ['^' + process.env.VUE_APP_BASE_API]: ''
+          ['^/light2/mock']: ''
+        },
+        onProxyRes: function(proxyRes, req, res){
+          //console.log(proxyRes)
         }
       }
     },

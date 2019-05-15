@@ -1,9 +1,10 @@
 import request from '@/utils/request'
 const mockPrefix = '/mock'
 
-export function getToken() {
+export function getProjectGroup() {
   return request({
-    url: mockPrefix + '/qiniu/upload/token', // 假地址 自行替换
+    url: 'api/enegyAnalyse/getProjectGroup',
     method: 'get'
   })
 }
+

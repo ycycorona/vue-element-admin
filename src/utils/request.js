@@ -63,7 +63,8 @@ service.interceptors.response.use(
         case 99:
           // 99权限验证失败
           Message({
-            message: `[ status: 99 ] reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
+            // message: `[ status: 99 ] reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
+            message: '登陆信息失效',
             type: 'error',
             duration: 5 * 1000
           })

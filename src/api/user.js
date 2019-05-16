@@ -16,9 +16,14 @@ export function getInfo(token) {
   })
 }
 
-export function logout() {
+/**
+ * 登出
+ * @param {*} token
+ */
+export function logout(token) {
   return request({
-    url: mockPrefix + '/user/logout',
-    method: 'post'
+    url: '/api/login/logout',
+    method: 'post',
+    data: { token: token }
   })
 }

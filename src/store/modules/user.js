@@ -99,6 +99,17 @@ const actions = {
     })
   },
 
+  // user logout frontend
+  logoutFrontEnd({ commit, state }) {
+    return new Promise((resolve, reject) => {
+      commit('SET_TOKEN', '')
+      commit('SET_ROLES', [])
+      removeToken()
+      resetRouter()
+      resolve()
+    })
+  },
+
   // remove token
   resetToken({ commit }) {
     return new Promise(resolve => {

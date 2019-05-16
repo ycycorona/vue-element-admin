@@ -2,12 +2,15 @@ import axios from 'axios'
 import { /* MessageBox, */ Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
-
+import router from '@/router'
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   withCredentials: true, // send cookies when cross-domain requests
-  timeout: 5000 // request timeout
+  timeout: 5000, // request timeout
+  headers: {
+    'Content-Type': 'application/json'
+  }
 })
 
 // request interceptor
@@ -58,12 +61,16 @@ service.interceptors.response.use(
           // [ 示例 ] code === 0 代表没有错误
           return dataAxios
         case 99:
-          // [ 示例 ] 其它和后台约定的 code
+          // 99权限验证失败
           Message({
             message: `[ status: 99 ] reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
             type: 'error',
             duration: 5 * 1000
           })
+          store.dispatch('user/logoutFrontEnd')
+            .then(res => {
+              router.push(`/login?redirect=${router.currentRoute.fullPath}`) /*  */
+            })
           break
         default:
           // 不是正确的 code

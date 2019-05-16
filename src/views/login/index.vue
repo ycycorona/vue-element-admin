@@ -161,7 +161,7 @@ export default {
           this.loading = true
           try {
             await this.$store.dispatch('user/login', this.loginForm)
-            await this.$store.dispatch('light/reqCommonData')
+            // await this.$store.dispatch('light/reqCommonData')
           } catch (err) {
             this.loading = false
             return

@@ -92,7 +92,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/light/energy-analyse/index'),
         name: 'energy-analyse',
-        meta: { title: '能耗分析', icon: 'documentation', affix: true }
+        meta: { title: '能耗分析', icon: 'documentation' }
       }
     ]
   },
@@ -104,7 +104,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/documentation/index'),
         name: 'Documentation',
-        meta: { title: 'Documentation', icon: 'documentation', affix: true }
+        meta: { title: 'Documentation', icon: 'documentation' }
       }
     ]
   },

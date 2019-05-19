@@ -1,11 +1,17 @@
 <template>
-  <div :class="className" :style="{height:height,width:width,'min-width':'1000px'}" />
+  <div>
+    <div class="btn-container">
+      <el-button type="primary" size="mini" @click="print">生成报表</el-button>
+      <el-button type="primary" size="mini" @click="$emit('export-excel')">导出到Excel</el-button>
+    </div>
+    <div :id="chartDomId" ref="echartDom" :class="className" :style="{height:height,width:width}" />
+  </div>
 </template>
 
 <script>
 import echarts from 'echarts'
 import { debounce } from '@/utils'
-
+import printJS from 'print-js'
 // const animationDuration = 6000
 
 export default {
@@ -16,7 +22,7 @@ export default {
     },
     width: {
       type: String,
-      default: '100%'
+      default: '95%'
     },
     height: {
       type: String,
@@ -29,6 +35,10 @@ export default {
     initChartOpt: {
       type: Object,
       default: () => {}
+    },
+    chartDomId: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -41,7 +51,6 @@ export default {
       this.initChart()
     })
     this.__resizeHandler = debounce(() => {
-      console.log(123)
       if (this.chart) {
         this.chart.resize()
       }
@@ -56,7 +65,7 @@ export default {
   },
   methods: {
     initChart() {
-      this.chart = echarts.init(this.$el)
+      this.chart = echarts.init(this.$refs['echartDom'])
       this.chart.setOption(this.initChartOpt)
     },
     setChart(chartOption) {
@@ -66,7 +75,32 @@ export default {
     resize() {
       console.log(123)
       this.__resizeHandler()
+    },
+    print() {
+      // const style = `@page { margin: 0 } @media print { #${this.imgId} {width:100%}}`
+      const chartImg = this.chart.getDataURL({
+        pixelRatio: 2,
+        backgroundColor: '#fff'
+      })
+      printJS({
+        printable: chartImg, // 要打印内容
+        type: 'image'
+        // maxWidth: 1600,
+        // style: style,
+        // scanStyles: false
+      })
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.btn-container {
+  text-align: right;
+  padding-right: 10px
+}
+.echarts-img {
+  display: none
+}
+</style>
+

@@ -1,8 +1,7 @@
 import { getProjectGroup } from '@/api/light/common'
 
-
 const state = {
-  projectGroup: [],
+  projectGroup: []
 }
 
 const mutations = {

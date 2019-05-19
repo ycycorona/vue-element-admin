@@ -78,6 +78,7 @@ export default {
   methods: {
     // 节点check回调
     nodeCheckChange(treeData, checked) {
+      // console.log(123)
       this.checkedNodeList = []
       // 克隆选择的节点
       // debugger

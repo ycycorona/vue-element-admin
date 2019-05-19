@@ -7,7 +7,7 @@ import router from '@/router'
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   withCredentials: true, // send cookies when cross-domain requests
-  timeout: 5000, // request timeout
+  timeout: 50000, // request timeout
   headers: {
     'Content-Type': 'application/json'
   }
@@ -47,11 +47,12 @@ service.interceptors.response.use(
    */
   response => {
     // dataAxios 是 axios 返回数据中的 data
+    // debugger
     const dataAxios = response.data
     // 这个状态码是和后端约定的
     const code = dataAxios.status
     // 根据 code 进行判断
-    if (code === undefined) {
+    if (dataAxios === '' || code === undefined) {
       // 如果没有 code 代表这不是项目后端开发的接口 比如可能是 D2Admin 请求最新版本
       return dataAxios
     } else {
@@ -66,7 +67,7 @@ service.interceptors.response.use(
             // message: `[ status: 99 ] reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
             message: '登陆信息失效',
             type: 'error',
-            duration: 5 * 1000
+            duration: 3 * 1000
           })
           store.dispatch('user/logoutFrontEnd')
             .then(res => {
@@ -78,7 +79,7 @@ service.interceptors.response.use(
           Message({
             message: `reason:${dataAxios.reason} msg:${dataAxios.msg} ${response.config.url}` || 'error',
             type: 'error',
-            duration: 5 * 1000
+            duration: 3 * 1000
           })
           break
       }
@@ -104,7 +105,7 @@ service.interceptors.response.use(
     Message({
       message: error.message,
       type: 'error',
-      duration: 5 * 1000
+      duration: 3 * 1000
     })
     return Promise.reject(error)
   }

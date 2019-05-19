@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-const mockPrefix = '/mock'
+// const mockPrefix = '/mock'
 
 export function getProjectGroup() {
   return request({
@@ -7,4 +7,7 @@ export function getProjectGroup() {
     method: 'get'
   })
 }
+
+export const backEndBase = 'http://47.92.126.243:8080/light2/'
+export const proName = 'light2'
 

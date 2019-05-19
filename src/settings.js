@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'Vue Element Admin',
+  title: '智慧路灯能耗管理平台',
 
   /**
    * @type {boolean} true | false

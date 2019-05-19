@@ -12,6 +12,9 @@ const name = defaultSettings.title || 'vue Element Admin' // page title
 // For example, Mac: sudo npm run
 const port = 9527 // dev port
 
+// const devHost = '47.92.126.243:8080'
+// const proName = 'light'
+
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {
   /**
@@ -37,7 +40,7 @@ module.exports = {
       // change xxx-api/login => mock/login
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       '/light2/api': {
-        target: `http://127.0.0.1:8080`,
+        target: `http://47.92.126.243:8080`,
         changeOrigin: true,
         pathRewrite: {
           // '^/api': '/api'

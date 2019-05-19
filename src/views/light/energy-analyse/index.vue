@@ -35,18 +35,19 @@
             </el-form>
           </div>
           <div class="charts-container">
-            <button @click="test" />
             <energy-analyse-charts
-              id="test"
               ref="energyConsumptionChart"
+              chart-dom-id="test"
               height="500px"
               :init-chart-opt="energyConsumptionDefaultOpt"
+              @export-excel="echartsExportExcel"
             />
             <div style="margin-top: 20px" />
             <energy-analyse-charts
               ref="energySavingChart"
               height="500px"
               :init-chart-opt="energySavingDefaultOpt"
+              @export-excel="echartsExportExcel"
             />
           </div>
         </div>
@@ -58,7 +59,7 @@
 <script>
 import splitPane from 'vue-splitpane'
 import { getProjectGroup } from '@/api/light/common'
-import { getOneP_GData, getMoreP_GData } from '@/api/light/energy-analyse'
+import { getOneP_GData, getMoreP_GData, getExcelPre, getExcelURL } from '@/api/light/energy-analyse'
 import ProGroSelector from '@/components/light/ProGroSelector/index.vue'
 import EnergyAnalyseCharts from './components/EnergyAnalyseCharts'
 import {
@@ -66,7 +67,6 @@ import {
   energyConsumptionDefaultOpt
 } from './components/EnergyAnalyseCharts/energy-analyse-charts-opt-default'
 import { deepClone } from '@/utils'
-import printJS from 'print-js'
 export default {
   name: 'EnergyAnalyse',
   components: { splitPane, ProGroSelector, EnergyAnalyseCharts },
@@ -80,7 +80,8 @@ export default {
       energyConsumptionDefaultOpt: energyConsumptionDefaultOpt,
       energySavingDefaultOpt: energySavingDefaultOpt,
       checkMode: null,
-      checkedList: []
+      checkedList: [],
+      lastReqData: null
     }
   },
   watch: {
@@ -95,9 +96,6 @@ export default {
     this.doGetProjectGroup()
   },
   methods: {
-    test() {
-      printJS('test', 'html')
-    },
     getNow() {
       return [new Date().valueOf(), new Date().valueOf()]
     },
@@ -125,7 +123,9 @@ export default {
     },
     // 获取数据 渲染图表
     getDataRenderCharts() {
-      if (!this.checkMode || this.checkedList.length === 0) { return }
+      if (!this.checkMode || this.checkedList.length === 0) {
+        this.geneChartsOption(null, false)
+      }
       this.getChartsData(this.checkMode, this.checkedList).then(
         ({ chartData, isMulti }) => {
           this.geneChartsOption(chartData, isMulti)
@@ -138,6 +138,12 @@ export default {
     geneChartsOption(chartData, isMulti) {
       const energyConsumptionOpt = deepClone(energyConsumptionDefaultOpt)
       const energySavingOpt = deepClone(energySavingDefaultOpt)
+      if (chartData === null) {
+        this.$refs['energyConsumptionChart'].setChart(energyConsumptionOpt)
+        this.$refs['energySavingChart'].setChart(energySavingOpt)
+        return
+      }
+
       if (isMulti) {
         energyConsumptionOpt.xAxis[0].data = chartData.bigArray // 图表1x轴日期数据
         energyConsumptionOpt.legend.data = chartData.p_gNameList // 图例  项目名列表
@@ -238,7 +244,7 @@ export default {
 
         if (checkedList.length === 0) {
           //  没有项
-          return
+          resolve(null)
         } else if (checkedList.length === 1) {
           // 单个项
           reqData[key].push(checkedList[0].id)
@@ -250,10 +256,28 @@ export default {
           request = getMoreP_GData
           isMulti = true
         }
-
+        this.lastReqData = reqData
         request(reqData).then(res => {
           resolve({ chartData: res, isMulti })
         })
+      })
+    },
+    /**
+     * 导出excel
+     */
+    echartsExportExcel() {
+      if (!this.lastReqData) {
+        this.$message({
+          message: '请先选择项目或编组',
+          type: 'error',
+          duration: 3 * 1000
+        })
+        return
+      }
+
+      getExcelPre(this.lastReqData).then(res => {
+        console.log(getExcelURL)
+        window.open(getExcelURL, '_blank')
       })
     }
   }

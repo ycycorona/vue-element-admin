@@ -40,8 +40,8 @@ module.exports = {
         target: `http://127.0.0.1:8080`,
         changeOrigin: true,
         pathRewrite: {
-          //'^/api': '/api'
-        },
+          // '^/api': '/api'
+        }
         // onProxyRes: function(proxyRes, req, res) {
         //   var cookies = proxyRes.headers['set-cookie'];
         //   var cookieRegex = /Path=\/XXX\//i;
@@ -63,10 +63,10 @@ module.exports = {
         target: `http://localhost:${port}/mock`,
         changeOrigin: true,
         pathRewrite: {
-          ['^/light2/mock']: ''
+          '^/light2/mock': ''
         },
-        onProxyRes: function(proxyRes, req, res){
-          //console.log(proxyRes)
+        onProxyRes: function(proxyRes, req, res) {
+          // console.log(proxyRes)
         }
       }
     },

@@ -86,13 +86,26 @@ export const constantRoutes = [
   {
     path: '/energy-analyse',
     component: Layout,
-    redirect: '/energy-analyse/index',
+    // redirect: '/energy-analyse/index',
     children: [
       {
-        path: 'index',
+        path: '',
         component: () => import('@/views/light/energy-analyse/index'),
-        name: 'energy-analyse',
+        name: 'EnergyAnalyse',
         meta: { title: '能耗分析', icon: 'documentation' }
+      }
+    ]
+  },
+  {
+    path: '/light-management',
+    component: Layout,
+    // redirect: '/light-management/index',
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/light/light-management/index'),
+        name: 'LightManagement',
+        meta: { title: '路灯管理', icon: 'documentation' }
       }
     ]
   },

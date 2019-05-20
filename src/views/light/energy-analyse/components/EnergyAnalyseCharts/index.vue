@@ -80,7 +80,8 @@ export default {
       // const style = `@page { margin: 0 } @media print { #${this.imgId} {width:100%}}`
       const chartImg = this.chart.getDataURL({
         pixelRatio: 2,
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        excludeComponents: ['toolbox']
       })
       printJS({
         printable: chartImg, // 要打印内容

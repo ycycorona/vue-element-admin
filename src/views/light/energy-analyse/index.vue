@@ -285,10 +285,6 @@ export default {
 </script>
 
 <style scoped>
-.app-container {
-  position: relative;
-  height: calc(100vh - 84px);
-}
 
 .left-container {
   /* background-color: #f38181; */

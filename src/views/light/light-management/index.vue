@@ -308,6 +308,8 @@ export default {
         this.doLightManagementGroupsInfoList()
       } else if (selectedType === 'gro') {
         this.doLightManagementInfoList()
+      } else if (selectedType === 'notApproved') {
+        //
       }
     },
     // 获取项目下的分组信息
@@ -317,6 +319,7 @@ export default {
         currentPage: this.currentPage,
         limit: this.limit,
         name: ''
+
       })
         .then(response => {
           this.tableData = response.projectInfo

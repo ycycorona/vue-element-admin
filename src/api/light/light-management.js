@@ -26,3 +26,11 @@ export function lightDetails(lightId) {
     method: 'get'
   })
 }
+
+// 更新路灯排序
+export function updateOrderPriority(lightId, groupId, newOrderPriority) {
+  return request({
+    url: `/api/lightManagement/updatepaixu/${lightId}/${groupId}/${newOrderPriority}`,
+    method: 'get'
+  })
+}

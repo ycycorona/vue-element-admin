@@ -180,19 +180,25 @@
                     </template>
                     <!-- 排序等级 -->
                     <template v-else-if="tableCol.prop==='paixu'">
-                      <template
-                        v-if="row.paixuEdit"
-                      >
-                        {{ row[tableCol.prop] }}
-                      </template>
-                      <template v-else>
+                      <div style="width:50%;display:inline-block">
+                        <el-input v-model="row[tableCol.prop]" size="mini" />
+                      </div>
+
+                      <el-button
+                        type="primary"
+                        size="mini"
+                        plain
+                        class="very-mini-btn"
+                        @click="doUpdateOrderPriority(row.id, row.gid, row.paixu)"
+                      >修改</el-button>
+                      <!-- <template v-else>
                         {{ '-' }}
-                      </template>
+                      </template> -->
                     </template>
                     <!-- 查看详情 -->
                     <template v-else-if="tableCol.prop==='getDetail'">
                       <div class="children-text-align">
-                        <el-button type="primary" size="small" @click="showDetailDialog(row.id)">详情</el-button>
+                        <el-button type="primary" size="small" plain @click="showDetailDialog(row.id)">详情</el-button>
                       </div>
                     </template>
                     <template v-else>{{ row[tableCol.prop] | emptyToLine }}</template>
@@ -205,6 +211,7 @@
         </div>
       </template>
     </split-pane>
+    <!-- 路灯详情弹窗 -->
     <el-dialog :visible.sync="isShowDetailDialog" title="路灯详情" width="30%" style="min-width: 300px">
       <div v-if="lightDetailData_1" v-loading="dialogLoading" class="detail-wrap">
         <el-row>
@@ -323,7 +330,8 @@ const imgs = {
 // import { deepClone } from '@/utils'
 import splitPane from 'vue-splitpane'
 import { getProjectGrouplight } from '@/api/light/common'
-import { lightManagementGroupsInfoList, lightManagementInfoList, lightDetails } from '@/api/light/light-management'
+import { lightManagementGroupsInfoList,
+  lightManagementInfoList, lightDetails, updateOrderPriority } from '@/api/light/light-management'
 import ProGroSingleSel from './components/ProGroSingleSel'
 import { TableThMapPro, TableThMapGro, OrderTypesOpt } from '@/config/light'
 import Pagination from '@/components/Pagination'
@@ -415,6 +423,7 @@ export default {
     onPagination() {
       this.getList()
     },
+    // 获取表格数据
     getList() {
       if (this.selectedType === 'pro') {
         this.doLightManagementGroupsInfoList()
@@ -508,6 +517,12 @@ export default {
     },
     onMapInit() {
 
+    },
+    doUpdateOrderPriority(lightId, groupId, newOrderPriority) {
+      updateOrderPriority(lightId, groupId, newOrderPriority)
+        .then((response) => {
+          this.getList()
+        })
     }
   }
 }
@@ -556,5 +571,8 @@ export default {
 }
 .detail-wrap .el-row {
   margin-bottom: 10px
+}
+.very-mini-btn {
+  padding: 7px 5px;
 }
 </style>

@@ -58,12 +58,12 @@ export const TableThMapGro = [
   {
     prop: 'createTime',
     label: '更新时间',
-    width: tableCellWidthMap.d
+    width: tableCellWidthMap.h
   },
   {
     prop: 'paixu',
     label: '排序等级',
-    width: tableCellWidthMap.d
+    width: tableCellWidthMap.f
   },
   {
     prop: 'getDetail',

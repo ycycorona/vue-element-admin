@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="full-height-app-container ">
     <split-pane split="vertical" :default-percent="15">
       <template slot="paneL">
         <div class="left-container">
@@ -33,7 +33,7 @@
                   <el-dropdown-item command="lightDetail_group">编组更新路灯状态</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
-              <el-form-item label="">
+              <el-form-item v-if="selectedType==='gro'" label="">
                 <el-select v-model="form.orderType" size="small">
                   <el-option
                     v-for="item in OrderTypesOpt"
@@ -59,14 +59,21 @@
           </div>
 
           <div class="table-container">
+            <!-- 选择项目时的表格 -->
             <template v-if="selectedType==='pro'">
               <el-table
+                v-loading="listLoading"
                 :data="tableData"
                 border
                 fit
                 highlight-current-row
                 style="width: 100%;"
+                @selection-change="handleSelectionChange"
               >
+                <el-table-column
+                  type="selection"
+                  width="55"
+                />
                 <el-table-column
                   v-for="(tableCol, index) in tableThMapPro"
                   :key="index"
@@ -75,36 +82,228 @@
                   :label="tableCol.label"
                 >
                   <template slot-scope="{row}">
-                    <template>{{ row[tableCol.prop] }}</template>
+                    <template>{{ row[tableCol.prop] | emptyToLine }}</template>
                   </template>
                 </el-table-column>
               </el-table>
             </template>
+            <!-- 选择编组时的表格 -->
             <template v-if="selectedType==='gro'">
               <el-table
+                v-loading="listLoading"
                 :data="tableData"
                 border
                 fit
                 highlight-current-row
                 style="width: 100%;"
+                @selection-change="handleSelectionChange"
               >
+                <el-table-column
+                  type="selection"
+                  width="55"
+                />
                 <el-table-column
                   v-for="(tableCol, index) in tableThMapGro"
                   :key="index"
                   :prop="tableCol.prop"
                   :min-width="tableCol.width"
                   :label="tableCol.label"
+                  :class-name="colClassName(tableCol.prop)"
                 >
                   <template slot-scope="{row}">
-                    <template>{{ row[tableCol.prop] }}</template>
+                    <!-- 一路二路灯光状态 -->
+                    <template v-if="tableCol.prop==='laststate1' || tableCol.prop==='laststate2'">
+                      <!--如果是空的就用  - 表示  -->
+                      <template
+                        v-if="row[tableCol.prop]===''"
+                      >
+                        {{ '' }}
+                      </template>
+                      <!--如果guanbi说明主路未安装  -->
+                      <template
+                        v-else-if="row[tableCol.prop]==='guanbi'"
+                      >
+                        <img :src="imgs.lightGb" class="cell-img">
+                      </template>
+                      <!--如果guzhang说明有故障  -->
+                      <template
+                        v-else-if="row[tableCol.prop]==='guzhang'"
+                      >
+                        <img :src="imgs.lightGz" class="cell-img">
+                      </template>
+                      <!--如果diaoxian表示控制器掉线就待读图示  -->
+                      <template
+                        v-else-if="row[tableCol.prop]==='diaoxian'"
+                      >
+                        <img :src="imgs.lightDengdai" class="cell-img">
+                      </template>
+                      <!-- 如果是1、3、4说明主路开灯 -->
+                      <template
+                        v-else-if="row[tableCol.prop]==='1'||
+                          row[tableCol.prop]==='3'||
+                          row[tableCol.prop]==='4'"
+                      >
+                        <img :src="imgs.lightKd" class="cell-img">
+                      </template>
+                      <!-- 如果是0、2说明主路关灯 -->
+                      <template
+                        v-else-if="row[tableCol.prop]==='0'||
+                          row[tableCol.prop]==='2'"
+                      >
+                        <img :src="imgs.lightKd" class="cell-img">
+                      </template>
+                      <template v-else>
+                        {{ row[tableCol.prop] }}
+                      </template>
+                    </template>
+                    <!-- 网关状态 -->
+                    <template v-else-if="tableCol.prop==='gatewayState'">
+                      <template
+                        v-if="row[tableCol.prop]===0"
+                      >
+                        <img :src="imgs.gatewayOnline" class="cell-img">
+                      </template>
+                      <template v-else>
+                        <img :src="imgs.gatewayOutline" class="cell-img">
+                      </template>
+                    </template>
+                    <!--1路调光  -->
+                    <template v-else-if="tableCol.prop==='dimmingSignal_1' || tableCol.prop==='dimmingSignal_2'">
+                      <template
+                        v-if="row[tableCol.prop]"
+                      >
+                        {{ row[tableCol.prop] }}
+                      </template>
+                      <template v-else>
+                        {{ '-' }}
+                      </template>
+                    </template>
+                    <!-- 排序等级 -->
+                    <template v-else-if="tableCol.prop==='paixu'">
+                      <template
+                        v-if="row.paixuEdit"
+                      >
+                        {{ row[tableCol.prop] }}
+                      </template>
+                      <template v-else>
+                        {{ '-' }}
+                      </template>
+                    </template>
+                    <!-- 查看详情 -->
+                    <template v-else-if="tableCol.prop==='getDetail'">
+                      <div class="children-text-align">
+                        <el-button type="primary" size="small" @click="showDetailDialog(row.id)">详情</el-button>
+                      </div>
+                    </template>
+                    <template v-else>{{ row[tableCol.prop] | emptyToLine }}</template>
                   </template>
                 </el-table-column>
               </el-table>
             </template>
           </div>
+          <pagination v-show="count>0" :total="count" :page.sync="currentPage" :limit.sync="limit" @pagination="onPagination" />
         </div>
       </template>
     </split-pane>
+    <el-dialog :visible.sync="isShowDetailDialog" title="路灯详情" width="30%" style="min-width: 300px">
+      <div v-if="lightDetailData_1" v-loading="dialogLoading" class="detail-wrap">
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">项目名称</span>
+            <span>{{ lightDetailData_1.projectName }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">编组名称</span>
+            <span>{{ lightDetailData_1.groupName }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">路灯编号</span>
+            <span>{{ lightDetailData_1.lightNumber }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">外壳编号</span>
+            <span>{{ lightDetailData_1.shellNumber }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">开关状态</span>
+            <span>{{ lightDetailData_2.status | lightStatus }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">日能耗(kWh)</span>
+            <span>{{ lightDetailData_2.power_kWh }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">实时电流(A)</span>
+            <span>{{ lightDetailData_2.realtime_current }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">实时电压(V)</span>
+            <span>{{ lightDetailData_2.realtime_vol }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">日出时间</span>
+            <span>{{ lightDetailData_2.sun_rise }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">日落时间</span>
+            <span>{{ lightDetailData_2.sun_set }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">1路调光信号</span>
+            <span>{{ lightDetailData_2.dimmingSignal_1 }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">2路调光信号</span>
+            <span>{{ lightDetailData_2.dimmingSignal_2 }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">1路点亮时间</span>
+            <span>{{ lightDetailData_2.lightUpTime_1?lightDetailData_2.lightUpTime_1+'分钟':'' }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">2路点亮时间</span>
+            <span>{{ lightDetailData_2.lightUpTime_2?lightDetailData_2.lightUpTime_2+'分钟':'' }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <span class="li-label detail">功率因数</span>
+            <span>{{ lightDetailData_2.powerFactor }}</span>
+          </el-col>
+          <el-col :span="12">
+            <span class="li-label detail">频率值</span>
+            <span>{{ lightDetailData_2.frequency }}</span>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <div class="map-canvas-light-wrap">
+              <light-location-map
+                :lng="lightDetailData_1.lng"
+                :lat="lightDetailData_1.lat"
+                @map-init-success="onMapInit"
+              />
+            </div>
+          </el-col>
+
+        </el-row>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="isShowDetailDialog = false">确定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -116,7 +315,7 @@ import lightKd from '@/assets/light/imgs/light-management/light-kd.png'
 import lightGd from '@/assets/light/imgs/light-management/light-gd.png'
 import gatewayOnline from '@/assets/light/imgs/light-management/gateway-online.png'
 import gatewayOutline from '@/assets/light/imgs/light-management/gateway-outline.png'
-
+import LightLocationMap from './components/LightLocationMap'
 const imgs = {
   lightGb, lightGz, lightDengdai, lightKd, lightGd, gatewayOnline, gatewayOutline
 }
@@ -124,143 +323,44 @@ const imgs = {
 // import { deepClone } from '@/utils'
 import splitPane from 'vue-splitpane'
 import { getProjectGrouplight } from '@/api/light/common'
-import { lightManagementGroupsInfoList, lightManagementInfoList } from '@/api/light/light-management'
+import { lightManagementGroupsInfoList, lightManagementInfoList, lightDetails } from '@/api/light/light-management'
 import ProGroSingleSel from './components/ProGroSingleSel'
-import tableCellWidthMap from '@/config/tableCellWidthMap'
+import { TableThMapPro, TableThMapGro, OrderTypesOpt } from '@/config/light'
+import Pagination from '@/components/Pagination'
 
-const tableThMapGro = [
-  {
-    prop: 'lightNumber',
-    label: '路灯编号',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'laststate1',
-    label: 'I路状态',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'laststate2',
-    label: 'II路状态',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'gatewayState',
-    label: '网关状态',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'dimmingSignal_1',
-    label: 'I路调光',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'dimmingSignal_2',
-    label: 'II路调光',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'realtime_vol',
-    label: '电压/V',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'realtime_current',
-    label: '电流/A',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'frequency',
-    label: '频率',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'powerFactor',
-    label: '功率因数',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'power_kWh',
-    label: '电量/kWh',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'createTime',
-    label: '更新时间',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'paixu',
-    label: '排序等级',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'getDetail',
-    label: '操作',
-    width: tableCellWidthMap.d
-  }
-]
-
-const tableThMapPro = [
-  {
-    prop: 'groupname',
-    label: '编组名称',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'versioninfo',
-    label: '版本信息',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'lightmodel',
-    label: '路灯模式',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'grouplocation',
-    label: '编组地址',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'areacode',
-    label: '区域码',
-    width: tableCellWidthMap.d
-  },
-  {
-    prop: 'banbenstring',
-    label: '路灯类型',
-    width: tableCellWidthMap.d
-  }]
-
-const OrderTypesOpt = [
-  {
-    label: '按排序等级排序',
-    value: 1
-  },
-  {
-    label: '按表格导入排序',
-    value: 2
-  },
-  {
-    label: '按路灯编号顺序',
-    value: 3
-  },
-  {
-    label: '按路灯编号倒序',
-    value: 4
-  }
-]
 export default {
   name: 'LightManagement',
 
   components: {
-    ProGroSingleSel, splitPane
+    ProGroSingleSel, splitPane, Pagination, LightLocationMap
+  },
+  filters: {
+    lightStatus(string) {
+      let res = ''
+      switch (string) {
+        case '0':
+          res = '全关'
+          break
+        case '1':
+          res = '主路开'
+          break
+        case '2':
+          res = '辅路开'
+          break
+        case '3':
+          res = '全开'
+          break
+        default:
+          res = '未校时'
+          break
+      }
+      return res
+    }
   },
   data() {
     return {
-      tableThMapPro: tableThMapPro,
-      tableThMapGro: tableThMapGro,
+      tableThMapPro: TableThMapPro,
+      tableThMapGro: TableThMapGro,
       imgs,
       projectGroupLightData: [],
       form: {
@@ -268,11 +368,18 @@ export default {
         name: ''
       },
       OrderTypesOpt: OrderTypesOpt,
-      selectedId: '',
-      selectedType: '',
+      selectedId: '', // 当前选择器选中的id
+      selectedType: '', // 当前的表格类型
       currentPage: 1,
       limit: 20,
-      tableData: null
+      count: 0,
+      tableData: null,
+      checkedTableRows: [],
+      listLoading: false, // 表格载入中
+      dialogLoading: false, // 详情对话框载入中
+      isShowDetailDialog: false,
+      lightDetailData_1: null,
+      lightDetailData_2: null
     }
   },
   computed: {
@@ -300,20 +407,26 @@ export default {
     },
     // 项目、编组单选器的回调
     nodeSelectChange(selectedId, selectedType) {
-      console.log(selectedId, selectedType)
+      // console.log(selectedId, selectedType)
       this.selectedId = selectedId
       this.selectedType = selectedType
-
-      if (selectedType === 'pro') {
+      this.getList()
+    },
+    onPagination() {
+      this.getList()
+    },
+    getList() {
+      if (this.selectedType === 'pro') {
         this.doLightManagementGroupsInfoList()
-      } else if (selectedType === 'gro') {
+      } else if (this.selectedType === 'gro') {
         this.doLightManagementInfoList()
-      } else if (selectedType === 'notApproved') {
+      } else if (this.selectedType === 'notApproved') {
         //
       }
     },
     // 获取项目下的分组信息
     doLightManagementGroupsInfoList() {
+      this.listLoading = true
       lightManagementGroupsInfoList({
         projectId: this.selectedId,
         currentPage: this.currentPage,
@@ -323,11 +436,16 @@ export default {
       })
         .then(response => {
           this.tableData = response.projectInfo
+          this.count = response.count
           // console.log(response.projectInfo)
+        })
+        .finally(() => {
+          this.listLoading = false
         })
     },
     // 获取分组下的路灯信息
     doLightManagementInfoList() {
+      this.listLoading = true
       lightManagementInfoList({
         groupId: this.selectedId,
         currentPage: this.currentPage,
@@ -337,20 +455,68 @@ export default {
 
       })
         .then(response => {
-          this.tableData = response.projectInfo
+          this.tableData = response.lightInfo
+          this.count = response.count
           // console.log(response.projectInfo)
+        })
+        .finally(() => {
+          this.listLoading = false
         })
     },
     // 路灯操作选择器回调
     lightManCommandClick(command) {
       console.log(command)
+    },
+    // table中得check回调
+    handleSelectionChange(val) {
+      this.checkedTableRow = val
+    },
+    // 动态为表格中的列 添加class
+    colClassName(prop) {
+      if (prop === 'laststate1' || prop === 'laststate2' || prop === 'gatewayState') {
+        return 'img-cell'
+      } else {
+        return ''
+      }
+    },
+    // 显示详情
+    showDetailDialog(id) {
+      this.isShowDetailDialog = true
+      this.getLightDetails(id)
+    },
+    // 获取路灯详情
+    getLightDetails(lightId) {
+      this.dialogLoading = true
+      lightDetails(lightId)
+        .then((response) => {
+          const datajson = JSON.parse(response.datajson).data
+          const dataDetails = response.details
+          if (datajson === 'rs') {
+            this.$message.error('网络不畅，请稍后再试！')
+            return
+          }
+          if (datajson === 'fail') {
+            this.$message.error('路灯未加网，可能因为不在通电时间内，请具体检查原因！')
+            return
+          }
+          this.lightDetailData_1 = dataDetails
+          this.lightDetailData_2 = datajson
+        })
+        .finally(() => {
+          this.dialogLoading = false
+        })
+    },
+    onMapInit() {
+
     }
   }
 }
 </script>
 
 <style>
-
+.img-cell > .cell {
+  text-align: center
+}
 </style>
 
 <style lang="scss" scoped>
@@ -373,5 +539,22 @@ export default {
 }
 .explain-img-wrap img {
   vertical-align: middle
+}
+.cell .cell-img {
+  height: 24px
+
+}
+.children-text-align {
+  text-align: center
+}
+.li-label.detail {
+  width: 100px;
+  display: inline-block;
+  font-weight: 700;
+  text-align: right;
+  padding-right: 10px;
+}
+.detail-wrap .el-row {
+  margin-bottom: 10px
 }
 </style>

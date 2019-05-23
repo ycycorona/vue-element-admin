@@ -122,6 +122,9 @@ aside {
 //main-container全局样式
 .app-container {
   padding: 20px;
+}
+.full-height-app-container {
+  padding: 20px;
   position: relative;
   height: calc(100vh - 84px);
 }

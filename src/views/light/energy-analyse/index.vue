@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="full-height-app-container ">
     <split-pane split="vertical" :default-percent="15" @resize="resize">
       <template slot="paneL">
         <div class="left-container">

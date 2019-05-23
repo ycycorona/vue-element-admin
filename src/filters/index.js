@@ -66,3 +66,14 @@ export function toThousandFilter(num) {
 export function uppercaseFirst(string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
+
+/**
+ * empty to '-'
+ */
+export function emptyToLine(string) {
+  if (!string && string !== 0) {
+    return '-'
+  } else {
+    return string
+  }
+}

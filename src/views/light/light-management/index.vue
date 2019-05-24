@@ -13,28 +13,40 @@
         <div class="right-container">
           <div class="filter-container form-filter">
             <el-form :inline="true" :model="form" size="small" class="form">
-              <el-button type="primary" size="small">刷新</el-button>
-              <el-button type="primary" size="small">删除</el-button>
-              <el-dropdown @command="lightManCommandClick">
-                <el-button type="primary" size="small">
-                  更多菜单<i class="el-icon-arrow-down el-icon--right" />
-                </el-button>
-                <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item command="popOClight">开关灯模式</el-dropdown-item>
-                  <el-dropdown-item command="qiangzhigonglv_group">强制开关灯功率</el-dropdown-item>
-                  <el-dropdown-item command="popUpdateModel">调光策略设置</el-dropdown-item>
-                  <el-dropdown-item command="popUpdateTime">编组时间校准</el-dropdown-item>
-                  <el-dropdown-item command="jiaobiao_group">编组校表</el-dropdown-item>
-                  <el-dropdown-item command="jwd_group">编组经纬度校准</el-dropdown-item>
-                  <el-dropdown-item command="panid_group">编组PANID修改</el-dropdown-item>
-                  <el-dropdown-item command="pindao_group">编组频道修改</el-dropdown-item>
-                  <el-dropdown-item command="setthresholdWindow_group">编组报警阈设置</el-dropdown-item>
-                  <el-dropdown-item command="settriggerWindow_group">红外触发参数设置</el-dropdown-item>
-                  <el-dropdown-item command="lightDetail_group">编组更新路灯状态</el-dropdown-item>
-                </el-dropdown-menu>
-              </el-dropdown>
+              <el-form-item label="">
+                <el-button type="primary" size="small">刷新</el-button>
+              </el-form-item>
+              <el-form-item v-if="selectedType==='notApproved'" label="">
+                <el-button type="primary" size="small" @click="isShowAddLightDialog=true">添加</el-button>
+              </el-form-item>
+              <el-form-item v-if="selectedType==='notApproved'" label="">
+                <el-button type="primary" size="small">修改</el-button>
+              </el-form-item>
+              <el-form-item label="">
+                <el-button type="primary" size="small">删除</el-button>
+              </el-form-item>
+              <el-form-item label="">
+                <el-dropdown @command="lightManCommandClick">
+                  <el-button type="primary" size="small">
+                    更多菜单<i class="el-icon-arrow-down el-icon--right" />
+                  </el-button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item command="popOClight">开关灯模式</el-dropdown-item>
+                    <el-dropdown-item command="qiangzhigonglv_group">强制开关灯功率</el-dropdown-item>
+                    <el-dropdown-item command="popUpdateModel">调光策略设置</el-dropdown-item>
+                    <el-dropdown-item command="popUpdateTime">编组时间校准</el-dropdown-item>
+                    <el-dropdown-item command="jiaobiao_group">编组校表</el-dropdown-item>
+                    <el-dropdown-item command="jwd_group">编组经纬度校准</el-dropdown-item>
+                    <el-dropdown-item command="panid_group">编组PANID修改</el-dropdown-item>
+                    <el-dropdown-item command="pindao_group">编组频道修改</el-dropdown-item>
+                    <el-dropdown-item command="setthresholdWindow_group">编组报警阈设置</el-dropdown-item>
+                    <el-dropdown-item command="settriggerWindow_group">红外触发参数设置</el-dropdown-item>
+                    <el-dropdown-item command="lightDetail_group">编组更新路灯状态</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </el-form-item>
               <el-form-item v-if="selectedType==='gro'" label="">
-                <el-select v-model="form.orderType" size="small">
+                <el-select v-model="form.orderType" size="small" @change="onOrderTypeChange">
                   <el-option
                     v-for="item in OrderTypesOpt"
                     :key="item.value"
@@ -43,10 +55,18 @@
                   />
                 </el-select>
               </el-form-item>
-              <el-form-item>
-                <el-input v-model="form.name" placeholder="按路灯编号查询" />
+
+              <el-form-item v-if="selectedType==='gro'">
+                <el-input v-model="form.name" placeholder="按路灯编号查询" style="width:50%" />
+                <el-button type="primary" size="small" @click="lightNameSearch">搜索</el-button>
               </el-form-item>
-              <el-form-item class="explain-img-wrap">
+
+              <el-form-item v-else>
+                <el-input v-model="form.name" placeholder="按编组名称查询" style="width:50%" />
+                <el-button type="primary" size="small" @click="lightNameSearch">搜索</el-button>
+              </el-form-item>
+
+              <el-form-item v-if="selectedType==='gro'" class="explain-img-wrap">
                 <img :src="imgs.lightGb" height="24px">关闭&nbsp;
                 <img :src="imgs.lightGz" height="24px">故障&nbsp;
                 <img :src="imgs.lightDengdai" height="24px">待读&nbsp;
@@ -213,102 +233,111 @@
     </split-pane>
     <!-- 路灯详情弹窗 -->
     <el-dialog :visible.sync="isShowDetailDialog" title="路灯详情" width="30%" style="min-width: 300px">
-      <div v-if="lightDetailData_1" v-loading="dialogLoading" class="detail-wrap">
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">项目名称</span>
-            <span>{{ lightDetailData_1.projectName }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">编组名称</span>
-            <span>{{ lightDetailData_1.groupName }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">路灯编号</span>
-            <span>{{ lightDetailData_1.lightNumber }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">外壳编号</span>
-            <span>{{ lightDetailData_1.shellNumber }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">开关状态</span>
-            <span>{{ lightDetailData_2.status | lightStatus }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">日能耗(kWh)</span>
-            <span>{{ lightDetailData_2.power_kWh }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">实时电流(A)</span>
-            <span>{{ lightDetailData_2.realtime_current }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">实时电压(V)</span>
-            <span>{{ lightDetailData_2.realtime_vol }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">日出时间</span>
-            <span>{{ lightDetailData_2.sun_rise }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">日落时间</span>
-            <span>{{ lightDetailData_2.sun_set }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">1路调光信号</span>
-            <span>{{ lightDetailData_2.dimmingSignal_1 }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">2路调光信号</span>
-            <span>{{ lightDetailData_2.dimmingSignal_2 }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">1路点亮时间</span>
-            <span>{{ lightDetailData_2.lightUpTime_1?lightDetailData_2.lightUpTime_1+'分钟':'' }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">2路点亮时间</span>
-            <span>{{ lightDetailData_2.lightUpTime_2?lightDetailData_2.lightUpTime_2+'分钟':'' }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <span class="li-label detail">功率因数</span>
-            <span>{{ lightDetailData_2.powerFactor }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="li-label detail">频率值</span>
-            <span>{{ lightDetailData_2.frequency }}</span>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="24">
-            <div class="map-canvas-light-wrap">
-              <light-location-map
-                :lng="lightDetailData_1.lng"
-                :lat="lightDetailData_1.lat"
-                @map-init-success="onMapInit"
-              />
-            </div>
-          </el-col>
+      <div v-loading="dialogLoading" class="detail-wrap">
+        <template v-if="lightDetailData_1">
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">项目名称</span>
+              <span>{{ lightDetailData_1.projectName }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">编组名称</span>
+              <span>{{ lightDetailData_1.groupName }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">路灯编号</span>
+              <span>{{ lightDetailData_1.lightNumber }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">外壳编号</span>
+              <span>{{ lightDetailData_1.shellNumber }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">开关状态</span>
+              <span>{{ lightDetailData_2.status | lightStatus }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">日能耗(kWh)</span>
+              <span>{{ lightDetailData_2.power_kWh }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">实时电流(A)</span>
+              <span>{{ lightDetailData_2.realtime_current }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">实时电压(V)</span>
+              <span>{{ lightDetailData_2.realtime_vol }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">日出时间</span>
+              <span>{{ lightDetailData_2.sun_rise }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">日落时间</span>
+              <span>{{ lightDetailData_2.sun_set }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">1路调光信号</span>
+              <span>{{ lightDetailData_2.dimmingSignal_1 }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">2路调光信号</span>
+              <span>{{ lightDetailData_2.dimmingSignal_2 }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">1路点亮时间</span>
+              <span>{{ lightDetailData_2.lightUpTime_1?lightDetailData_2.lightUpTime_1+'分钟':'' }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">2路点亮时间</span>
+              <span>{{ lightDetailData_2.lightUpTime_2?lightDetailData_2.lightUpTime_2+'分钟':'' }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <span class="li-label detail">功率因数</span>
+              <span>{{ lightDetailData_2.powerFactor }}</span>
+            </el-col>
+            <el-col :span="12">
+              <span class="li-label detail">频率值</span>
+              <span>{{ lightDetailData_2.frequency }}</span>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <div class="map-canvas-light-wrap">
+                <light-location-map
+                  :lng="lightDetailData_1.lng"
+                  :lat="lightDetailData_1.lat"
+                  @map-init-success="onMapInit"
+                />
+              </div>
+            </el-col>
+          </el-row>
+        </template>
 
-        </el-row>
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="isShowDetailDialog = false">确定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog :visible.sync="isShowAddLightDialog" title="添加路灯" width="50%" style="min-width: 300px">
+      <add-light-pop :project-group-light-data="projectGroupLightData" />
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="isShowAddLighDialog = false">确定</el-button>
+        <el-button @click="isShowAddLighDialog = false">取消</el-button>
       </span>
     </el-dialog>
   </div>
@@ -323,6 +352,8 @@ import lightGd from '@/assets/light/imgs/light-management/light-gd.png'
 import gatewayOnline from '@/assets/light/imgs/light-management/gateway-online.png'
 import gatewayOutline from '@/assets/light/imgs/light-management/gateway-outline.png'
 import LightLocationMap from './components/LightLocationMap'
+import AddLightPop from './components/AddLightPop'
+
 const imgs = {
   lightGb, lightGz, lightDengdai, lightKd, lightGd, gatewayOnline, gatewayOutline
 }
@@ -336,11 +367,18 @@ import ProGroSingleSel from './components/ProGroSingleSel'
 import { TableThMapPro, TableThMapGro, OrderTypesOpt } from '@/config/light'
 import Pagination from '@/components/Pagination'
 
+function resetFormFilter() {
+  return {
+    orderType: 1,
+    name: ''
+  }
+}
+
 export default {
   name: 'LightManagement',
 
   components: {
-    ProGroSingleSel, splitPane, Pagination, LightLocationMap
+    ProGroSingleSel, splitPane, Pagination, LightLocationMap, AddLightPop
   },
   filters: {
     lightStatus(string) {
@@ -371,10 +409,7 @@ export default {
       tableThMapGro: TableThMapGro,
       imgs,
       projectGroupLightData: [],
-      form: {
-        orderType: 1,
-        name: ''
-      },
+      form: resetFormFilter(),
       OrderTypesOpt: OrderTypesOpt,
       selectedId: '', // 当前选择器选中的id
       selectedType: '', // 当前的表格类型
@@ -386,6 +421,7 @@ export default {
       listLoading: false, // 表格载入中
       dialogLoading: false, // 详情对话框载入中
       isShowDetailDialog: false,
+      isShowAddLightDialog: false,
       lightDetailData_1: null,
       lightDetailData_2: null
     }
@@ -418,8 +454,17 @@ export default {
       // console.log(selectedId, selectedType)
       this.selectedId = selectedId
       this.selectedType = selectedType
+      this.reset()
       this.getList()
     },
+    reset() {
+      this.form = resetFormFilter()
+      this.currentPage = 1
+      this.limit = 20
+      this.count = 0
+      this.tableData = null
+    },
+    // 触发分页
     onPagination() {
       this.getList()
     },
@@ -440,8 +485,7 @@ export default {
         projectId: this.selectedId,
         currentPage: this.currentPage,
         limit: this.limit,
-        name: ''
-
+        name: this.form.name
       })
         .then(response => {
           this.tableData = response.projectInfo
@@ -452,15 +496,15 @@ export default {
           this.listLoading = false
         })
     },
-    // 获取分组下的路灯信息
+    // 获取路灯信息列表
     doLightManagementInfoList() {
       this.listLoading = true
       lightManagementInfoList({
         groupId: this.selectedId,
         currentPage: this.currentPage,
         limit: this.limit,
-        name: '',
-        sortType: 1
+        name: this.form.name,
+        sortType: this.form.orderType
 
       })
         .then(response => {
@@ -518,11 +562,21 @@ export default {
     onMapInit() {
 
     },
+    // 更新路灯的排序等级
     doUpdateOrderPriority(lightId, groupId, newOrderPriority) {
       updateOrderPriority(lightId, groupId, newOrderPriority)
         .then((response) => {
           this.getList()
         })
+    },
+    // 排序方式改变
+    onOrderTypeChange() {
+      console.log(123)
+      this.getList()
+    },
+    // 按名称搜索
+    lightNameSearch() {
+      this.getList()
     }
   }
 }

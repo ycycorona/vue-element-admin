@@ -34,3 +34,20 @@ export function updateOrderPriority(lightId, groupId, newOrderPriority) {
     method: 'get'
   })
 }
+
+// 根据groupId获取网关信息
+export function getInfoFromGatewayId(groupId) {
+  return request({
+    url: `/api/lightManagement/getgatewayid/${groupId}`,
+    method: 'get'
+  })
+}
+
+// 获取路灯类型
+export function getLightType() {
+  return request({
+    url: `api/lightManagement/getLightType`,
+    method: 'get'
+  })
+}
+

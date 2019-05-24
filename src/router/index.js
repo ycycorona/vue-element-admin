@@ -89,7 +89,7 @@ export const constantRoutes = [
     // redirect: '/energy-analyse/index',
     children: [
       {
-        path: '',
+        path: '/energy-analyse',
         component: () => import('@/views/light/energy-analyse/index'),
         name: 'EnergyAnalyse',
         meta: { title: '能耗分析', icon: 'documentation' }
@@ -102,7 +102,7 @@ export const constantRoutes = [
     // redirect: '/light-management/index',
     children: [
       {
-        path: '',
+        path: '/light-management',
         component: () => import('@/views/light/light-management/index'),
         name: 'LightManagement',
         meta: { title: '路灯管理', icon: 'documentation' }

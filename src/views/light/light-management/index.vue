@@ -1,5 +1,5 @@
 <template>
-  <div class="full-height-app-container ">
+  <div v-loading="commonLoading" class="full-height-app-container ">
     <split-pane split="vertical" :default-percent="15">
       <template slot="paneL">
         <div class="left-container">
@@ -41,7 +41,7 @@
                     <el-dropdown-item command="pindao_group">编组频道修改</el-dropdown-item>
                     <el-dropdown-item command="setthresholdWindow_group">编组报警阈设置</el-dropdown-item>
                     <el-dropdown-item command="settriggerWindow_group">红外触发参数设置</el-dropdown-item>
-                    <el-dropdown-item command="lightDetail_group">编组更新路灯状态</el-dropdown-item>
+                    <el-dropdown-item command="lightDetail_group">编组更新智能灯状态</el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
               </el-form-item>
@@ -57,12 +57,18 @@
               </el-form-item>
 
               <el-form-item v-if="selectedType==='gro'">
-                <el-input v-model="form.name" placeholder="按路灯编号查询" style="width:50%" />
+                <el-input v-model="form.lightName" placeholder="按智能灯编号查询" style="width:50%" />
+                <el-button type="primary" size="small" @click="lightNameSearch">搜索</el-button>
+              </el-form-item>
+
+              <el-form-item v-else-if="selectedType==='notApproved'">
+                <el-input v-model="form.projectName" placeholder="按项目名称查询" style="width:35%" />
+                <el-input v-model="form.groupName" placeholder="按编组名称查询" style="width:35%" />
                 <el-button type="primary" size="small" @click="lightNameSearch">搜索</el-button>
               </el-form-item>
 
               <el-form-item v-else>
-                <el-input v-model="form.name" placeholder="按编组名称查询" style="width:50%" />
+                <el-input v-model="form.groupName" placeholder="按编组名称查询" style="width:50%" />
                 <el-button type="primary" size="small" @click="lightNameSearch">搜索</el-button>
               </el-form-item>
 
@@ -79,6 +85,39 @@
           </div>
 
           <div class="table-container">
+            <!-- 选择未审核项目时的表格 -->
+            <template v-if="selectedType==='notApproved'">
+              <el-table
+                v-loading="listLoading"
+                :data="tableData"
+                border
+                fit
+                highlight-current-row
+                style="width: 100%;"
+                @selection-change="handleSelectionChange"
+              >
+                <el-table-column
+                  type="selection"
+                  width="55"
+                />
+                <el-table-column
+                  v-for="(tableCol, index) in tableThMapNotApproved"
+                  :key="index"
+                  :prop="tableCol.prop"
+                  :min-width="tableCol.width"
+                  :label="tableCol.label"
+                >
+                  <template slot-scope="{row}">
+                    <template v-if="tableCol.prop==='getDetail'">
+                      <div class="children-text-align">
+                        <el-button type="primary" size="small" plain @click="showNotApprovedDetailDialog(row.id)">详情</el-button>
+                      </div>
+                    </template>
+                    <template v-else>{{ row[tableCol.prop] | emptyToLine }}</template>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
             <!-- 选择项目时的表格 -->
             <template v-if="selectedType==='pro'">
               <el-table
@@ -131,7 +170,7 @@
                   :class-name="colClassName(tableCol.prop)"
                 >
                   <template slot-scope="{row}">
-                    <!-- 一路二路灯光状态 -->
+                    <!-- 一路二智能灯光状态 -->
                     <template v-if="tableCol.prop==='laststate1' || tableCol.prop==='laststate2'">
                       <!--如果是空的就用  - 表示  -->
                       <template
@@ -231,9 +270,9 @@
         </div>
       </template>
     </split-pane>
-    <!-- 路灯详情弹窗 -->
-    <el-dialog :visible.sync="isShowDetailDialog" title="路灯详情" width="30%" style="min-width: 300px">
-      <div v-loading="dialogLoading" class="detail-wrap">
+    <!-- 智能灯详情弹窗 -->
+    <el-dialog :visible.sync="isShowDetailDialog" title="智能灯详情" width="30%" style="min-width: 300px">
+      <div class="detail-wrap">
         <template v-if="lightDetailData_1">
           <el-row>
             <el-col :span="12">
@@ -247,7 +286,7 @@
           </el-row>
           <el-row>
             <el-col :span="12">
-              <span class="li-label detail">路灯编号</span>
+              <span class="li-label detail">智能灯编号</span>
               <span>{{ lightDetailData_1.lightNumber }}</span>
             </el-col>
             <el-col :span="12">
@@ -333,11 +372,38 @@
         <el-button type="primary" @click="isShowDetailDialog = false">确定</el-button>
       </span>
     </el-dialog>
-    <el-dialog :visible.sync="isShowAddLightDialog" title="添加路灯" width="50%" style="min-width: 300px">
-      <add-light-pop :project-group-light-data="projectGroupLightData" />
+    <!-- 添加智能灯弹窗 -->
+    <el-dialog :visible.sync="isShowAddLightDialog" title="添加智能灯" width="50%" style="min-width: 300px">
+      <add-light-pop ref="addLightDialogForm" :project-group-light-data="projectGroupLightData" />
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="isShowAddLighDialog = false">确定</el-button>
-        <el-button @click="isShowAddLighDialog = false">取消</el-button>
+        <el-button type="primary" @click="doAddLight">确定</el-button>
+        <el-button @click="isShowAddLightDialog = false">取消</el-button>
+      </span>
+    </el-dialog>
+    <!-- 编辑未通过审核的智能灯 -->
+    <el-dialog :visible.sync="isShowEditLightDialog" title="编辑智能灯" width="50%" style="min-width: 300px">
+      <edit-light-pop
+        v-if="upLightDetailData"
+        ref="editLightDialogForm"
+        :detail-data="upLightDetailData"
+        :project-group-light-data="projectGroupLightData"
+      />
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="doEditLight">确定</el-button>
+        <el-button @click="isShowEditLightDialog = false">取消</el-button>
+      </span>
+    </el-dialog>
+    <!-- 查看未审核通过的智能灯 -->
+    <el-dialog :visible.sync="isShowReadonlyNotApLightDialog" title="未通过审核智能灯" width="50%" style="min-width: 300px">
+      <edit-light-pop
+        v-if="upLightDetailData"
+        ref="readonlyLightDialogForm"
+        :detail-data="upLightDetailData"
+        :readonly="true"
+        :project-group-light-data="projectGroupLightData"
+      />
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="isShowReadonlyNotApLightDialog = false">确定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -361,16 +427,18 @@ const imgs = {
 // import { deepClone } from '@/utils'
 import splitPane from 'vue-splitpane'
 import { getProjectGrouplight } from '@/api/light/common'
-import { lightManagementGroupsInfoList,
-  lightManagementInfoList, lightDetails, updateOrderPriority } from '@/api/light/light-management'
+import { lightManagementGroupsInfoList, addLight, lightManagement,
+  lightManagementInfoList, lightDetails, updateOrderPriority, lightDetailsNP } from '@/api/light/light-management'
 import ProGroSingleSel from './components/ProGroSingleSel'
-import { TableThMapPro, TableThMapGro, OrderTypesOpt } from '@/config/light'
+import { TableThMapPro, TableThMapGro, TableThMapNotApproved, OrderTypesOpt } from '@/config/light'
 import Pagination from '@/components/Pagination'
 
 function resetFormFilter() {
   return {
     orderType: 1,
-    name: ''
+    lightName: '',
+    groupName: '',
+    projectName: ''
   }
 }
 
@@ -407,6 +475,7 @@ export default {
     return {
       tableThMapPro: TableThMapPro,
       tableThMapGro: TableThMapGro,
+      tableThMapNotApproved: TableThMapNotApproved,
       imgs,
       projectGroupLightData: [],
       form: resetFormFilter(),
@@ -419,11 +488,15 @@ export default {
       tableData: null,
       checkedTableRows: [],
       listLoading: false, // 表格载入中
+      commonLoading: false, // 组件内通用的loading
       dialogLoading: false, // 详情对话框载入中
       isShowDetailDialog: false,
       isShowAddLightDialog: false,
+      isShowEditLightDialog: false,
+      isShowReadonlyNotApLightDialog: false,
       lightDetailData_1: null,
-      lightDetailData_2: null
+      lightDetailData_2: null,
+      upLightDetailData: null // 未通过审核路灯详情
     }
   },
   computed: {
@@ -475,7 +548,7 @@ export default {
       } else if (this.selectedType === 'gro') {
         this.doLightManagementInfoList()
       } else if (this.selectedType === 'notApproved') {
-        //
+        this.doGetUnprovedLight()
       }
     },
     // 获取项目下的分组信息
@@ -485,7 +558,7 @@ export default {
         projectId: this.selectedId,
         currentPage: this.currentPage,
         limit: this.limit,
-        name: this.form.name
+        name: this.form.lightName
       })
         .then(response => {
           this.tableData = response.projectInfo
@@ -496,14 +569,14 @@ export default {
           this.listLoading = false
         })
     },
-    // 获取路灯信息列表
+    // 获取智能灯信息列表
     doLightManagementInfoList() {
       this.listLoading = true
       lightManagementInfoList({
         groupId: this.selectedId,
         currentPage: this.currentPage,
         limit: this.limit,
-        name: this.form.name,
+        name: this.form.groupName,
         sortType: this.form.orderType
 
       })
@@ -516,7 +589,26 @@ export default {
           this.listLoading = false
         })
     },
-    // 路灯操作选择器回调
+    // 获取未通过审核的路灯列表
+    doGetUnprovedLight() {
+      // debugger
+      this.listLoading = true
+      lightManagement({
+        projectName: this.form.projectName,
+        groupName: this.form.groupName,
+        currentPage: this.currentPage,
+        limit: this.limit,
+        approved: false
+      })
+        .then(response => {
+          this.tableData = response.list
+          this.count = response.count
+        })
+        .finally(() => {
+          this.listLoading = false
+        })
+    },
+    // 智能灯操作选择器回调
     lightManCommandClick(command) {
       console.log(command)
     },
@@ -534,35 +626,76 @@ export default {
     },
     // 显示详情
     showDetailDialog(id) {
-      this.isShowDetailDialog = true
+      this.commonLoading = true
       this.getLightDetails(id)
-    },
-    // 获取路灯详情
-    getLightDetails(lightId) {
-      this.dialogLoading = true
-      lightDetails(lightId)
         .then((response) => {
           const datajson = JSON.parse(response.datajson).data
           const dataDetails = response.details
           if (datajson === 'rs') {
             this.$message.error('网络不畅，请稍后再试！')
-            return
+            return false
           }
           if (datajson === 'fail') {
-            this.$message.error('路灯未加网，可能因为不在通电时间内，请具体检查原因！')
-            return
+            this.$message.error('智能灯未加网，可能因为不在通电时间内，请具体检查原因！')
+            return false
           }
           this.lightDetailData_1 = dataDetails
           this.lightDetailData_2 = datajson
+          return true
+        })
+        .then(res => {
+          if (res) {
+            this.isShowDetailDialog = true
+          }
         })
         .finally(() => {
-          this.dialogLoading = false
+          this.commonLoading = false
         })
+    },
+    // 获取智能灯详情
+    getLightDetails(lightId) {
+      return lightDetails(lightId)
+    },
+    // 显示路灯编辑弹窗
+    showLightEditDialog(lightId) {
+      this.commonLoading = true
+      this.doLightDetailsNP(lightId)
+        .then((response) => {
+          console.log(response)
+        })
+        .then(res => {
+          if (res) {
+            this.isShowEditLightDialog = true
+          }
+        })
+        .finally(() => {
+          this.commonLoading = false
+        })
+    },
+    // 显示未审核通过路灯详情弹窗
+    showNotApprovedDetailDialog(lightId) {
+      this.commonLoading = true
+      this.doLightDetailsNP(lightId)
+        .then(response => {
+          this.upLightDetailData = response.details
+        })
+        .then(res => {
+          if (res) {
+            this.isShowReadonlyNotApLightDialog = true
+          }
+        })
+        .finally(() => {
+          this.commonLoading = false
+        })
+    },
+    // 获取未通过审核的智能灯详情
+    doLightDetailsNP(lightId) {
+      return lightDetailsNP(lightId)
     },
     onMapInit() {
 
     },
-    // 更新路灯的排序等级
+    // 更新智能灯的排序等级
     doUpdateOrderPriority(lightId, groupId, newOrderPriority) {
       updateOrderPriority(lightId, groupId, newOrderPriority)
         .then((response) => {
@@ -577,6 +710,19 @@ export default {
     // 按名称搜索
     lightNameSearch() {
       this.getList()
+    },
+    // 添加路灯
+    doAddLight() {
+      // this.isShowAddLightDialog = false
+      const addLightParams = this.$refs['addLightDialogForm'].getAddLightParams()
+      console.log(addLightParams)
+      addLight(addLightParams)
+        .then(response => {
+          console.log(response)
+        })
+    },
+    doEditLight() {
+
     }
   }
 }

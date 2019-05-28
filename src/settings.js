@@ -1,5 +1,5 @@
 module.exports = {
-  title: '智慧路灯能耗管理平台',
+  title: '智慧照明管理平台',
 
   /**
    * @type {boolean} true | false

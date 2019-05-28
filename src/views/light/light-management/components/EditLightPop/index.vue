@@ -184,8 +184,9 @@ import { deepClone } from '@/utils'
 import CommonSelector from '@/components/CommonSelector'
 import LightLocationMap from '../LightLocationMap'
 import { getInfoFromGatewayId, getLightType } from '@/api/light/light-management'
+import Promise from 'lie'
 export default {
-  name: 'AddLightPop',
+  name: 'EditLightPop',
   components: {
     CommonSelector, LightLocationMap
   },
@@ -194,6 +195,16 @@ export default {
       type: Array,
       required: false,
       default: () => []
+    },
+    detailData: {
+      type: Object,
+      required: false,
+      default: () => null
+    },
+    readonly: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
   data() {
@@ -272,10 +283,22 @@ export default {
   watch: {
 
   },
-  created() {
-    this.doGetLightType()
+  async created() {
+    await this.doGetLightType()
+    this.setData()
+    if (this.readonly) {
+      // set readonly
+    }
   },
   methods: {
+    // 回显数据
+    setData() {
+      if (this.detailData) {
+        // const detail = this.detailData
+        // const form = this.form
+        // form.projectId = detail.
+      }
+    },
     getAddLightParams() {
       let obj
       this.$refs['form'].validate((vaild) => {
@@ -309,6 +332,7 @@ export default {
 
       return obj
     },
+    // 验证表单数据
     doValidate() {
       this.$refs['form'].validate((vaild) => {
         if (vaild) {
@@ -316,6 +340,7 @@ export default {
         }
       })
     },
+    // 项目id改变
     projectIdChange(obj) {
       this.lightGroupIdOpts = deepClone(obj.sub)
     },
@@ -331,10 +356,16 @@ export default {
     },
     // 获取智能灯类型
     doGetLightType() {
-      getLightType()
-        .then(response => {
-          this.lightTypeOpts = response
-        })
+      return new Promise((resolve, reject) => {
+        getLightType()
+          .then(response => {
+            this.lightTypeOpts = response
+            resolve()
+          })
+          .catch(err => {
+            reject(err)
+          })
+      })
     },
     // mac地址input自动更正
     onMacInput(obj, key) {
@@ -353,9 +384,11 @@ export default {
         obj[key] = 0
       }
     },
+    // 获取焦点回调
     onFocusSelect(ref) {
       this.$refs[ref][0].select()
     },
+    // 地图选点回调
     onDragPosition({ lat, lng }) {
       this.lat = lat
       this.lng = lng

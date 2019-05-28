@@ -25,7 +25,7 @@ export default {
   },
   data() {
     return {
-      title: '智慧路灯能耗管理平台',
+      title: '智慧照明管理平台',
       logo: logoImg
     }
   }

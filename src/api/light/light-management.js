@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 获取路灯信息列表
+// 获取智能灯信息列表
 export function lightManagementInfoList({ groupId, currentPage, limit, name, sortType }) {
   return request({
     url: `/api/lightManagement/filterLightInfo/${name || null}/${groupId}/${currentPage}/${limit}/${sortType}`,
@@ -19,7 +19,7 @@ export function lightManagementGroupsInfoList({ projectId, currentPage, limit, n
   })
 }
 
-// 获取路灯详情
+// 获取智能灯详情
 export function lightDetails(lightId) {
   return request({
     url: `/api/lightManagement/lightDetails/${lightId}`,
@@ -27,7 +27,7 @@ export function lightDetails(lightId) {
   })
 }
 
-// 更新路灯排序
+// 更新智能灯排序
 export function updateOrderPriority(lightId, groupId, newOrderPriority) {
   return request({
     url: `/api/lightManagement/updatepaixu/${lightId}/${groupId}/${newOrderPriority}`,
@@ -43,7 +43,7 @@ export function getInfoFromGatewayId(groupId) {
   })
 }
 
-// 获取路灯类型
+// 获取智能灯类型
 export function getLightType() {
   return request({
     url: `api/lightManagement/getLightType`,
@@ -51,3 +51,33 @@ export function getLightType() {
   })
 }
 
+// 添加智能灯
+export function addLight(addLightParams) {
+  return request({
+    url: `api/lightManagement/addLight`,
+    method: 'post',
+    data: addLightParams
+  })
+}
+
+// 获取未通过审核的智能灯列表
+export function lightManagement({ groupName, projectName, approved, currentPage, limit }) {
+  // debugger
+  return request({
+    url: `/api/lightManagement/list/${currentPage}/${limit}`,
+    method: 'post',
+    data: {
+      approved: approved,
+      filter1: projectName,
+      filter2: groupName
+    }
+  })
+}
+
+// 获取未通过审核的智能灯详情
+export function lightDetailsNP(lightId) {
+  return request({
+    url: `/api/lightManagement/lightDetailsNP/${lightId}`,
+    method: 'get'
+  })
+}

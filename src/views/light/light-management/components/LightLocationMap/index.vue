@@ -25,11 +25,20 @@ export default {
     lat: {
       type: String,
       required: true
+    },
+    isDraggable: {
+      type: Boolean,
+      default: false,
+      required: false
     }
   },
   data() {
     return {
-      aMapIns: null
+      aMapIns: null,
+      currentMakerPosition: {
+        lat: null,
+        lng: null
+      }
     }
   },
   computed: {
@@ -69,9 +78,14 @@ export default {
     },
     setMarker() {
       // eslint-disable-next-line
-      new AMap.Marker({
+      const marker = new AMap.Marker({
         map: this.aMapIns,
-        position: [this.lng, this.lat]
+        position: [this.lng, this.lat],
+        draggable: this.isDraggable
+      })
+      marker.on('mouseup', () => {
+        this.currentMakerPosition = marker.getPosition()
+        this.$emit('drag-position', this.currentMakerPosition)
       })
     }
   }

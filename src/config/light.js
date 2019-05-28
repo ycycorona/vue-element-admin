@@ -2,7 +2,7 @@ import tableCellWidthMap from './tableCellWidthMap'
 export const TableThMapGro = [
   {
     prop: 'lightNumber',
-    label: '路灯编号',
+    label: '智能灯编号',
     width: tableCellWidthMap.d
   },
   {
@@ -85,7 +85,7 @@ export const TableThMapPro = [
   },
   {
     prop: 'lightmodel',
-    label: '路灯模式',
+    label: '智能灯模式',
     width: tableCellWidthMap.d
   },
   {
@@ -100,9 +100,57 @@ export const TableThMapPro = [
   },
   {
     prop: 'banbenstring',
-    label: '路灯类型',
+    label: '智能灯类型',
     width: tableCellWidthMap.d
   }]
+
+export const TableThMapNotApproved = [
+  {
+    prop: 'createTime',
+    label: '录入时间',
+    width: tableCellWidthMap.d
+  },
+  {
+    prop: 'createUser',
+    label: '录入账号',
+    width: tableCellWidthMap.d
+  },
+  {
+    prop: 'projectName',
+    label: '项目名称',
+    width: tableCellWidthMap.d
+  },
+  {
+    prop: 'gatewayName',
+    label: '网关名称',
+    width: tableCellWidthMap.f
+  },
+  {
+    prop: 'groupName',
+    label: '编组名称',
+    width: tableCellWidthMap.f
+  },
+  {
+    prop: 'lightSerielNum',
+    label: '智能灯编号',
+    width: tableCellWidthMap.c
+  },
+  {
+    prop: 'banben',
+    label: '智能灯版本',
+    width: tableCellWidthMap.c
+  },
+  {
+    prop: 'isApproved',
+    label: '审核状态',
+    width: tableCellWidthMap.c
+  },
+  {
+    prop: 'getDetail',
+    label: '获取详情',
+    width: tableCellWidthMap.d
+  }
+]
 
 export const OrderTypesOpt = [
   {
@@ -114,11 +162,11 @@ export const OrderTypesOpt = [
     value: 2
   },
   {
-    label: '按路灯编号顺序',
+    label: '按智能灯编号顺序',
     value: 3
   },
   {
-    label: '按路灯编号倒序',
+    label: '按智能灯编号倒序',
     value: 4
   }
 ]

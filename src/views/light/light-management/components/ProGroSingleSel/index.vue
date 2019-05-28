@@ -29,7 +29,7 @@ export default {
         children: 'sub',
         label: 'name'
       },
-      selectType: '', // 选择模式 gro 编组； pro 项目 notApproved 未通过审核路灯
+      selectType: '', // 选择模式 gro 编组； pro 项目 notApproved 未通过审核智能灯
       selectedId: null // 选择的节点
     }
   },
@@ -38,7 +38,7 @@ export default {
       const _treeData = deepClone(this.treeData)
       _treeData.unshift({
         id: 99999,
-        name: '待审核路灯',
+        name: '待审核智能灯',
         sub: [],
         notApproved: true
       })
@@ -51,7 +51,7 @@ export default {
   methods: {
     // 节点check回调
     nodeSelectChange(nodeData, nodeObj) {
-      // 未审核路灯
+      // 未审核智能灯
       if (nodeData.notApproved) {
         this.selectType = 'notApproved'
         this.selectedId = nodeData.id

@@ -105,7 +105,7 @@ export const constantRoutes = [
         path: '/light-management',
         component: () => import('@/views/light/light-management/index'),
         name: 'LightManagement',
-        meta: { title: '路灯管理', icon: 'documentation' }
+        meta: { title: '智能灯管理', icon: 'documentation' }
       }
     ]
   },

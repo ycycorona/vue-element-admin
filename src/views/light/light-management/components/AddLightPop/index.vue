@@ -28,12 +28,12 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="智能灯编号" prop="lightNumber">
-            <el-input v-model="form.lightNumber" placeholder="智能灯编号" class="normal-width-input" />
+            <el-input v-model="form.lightNumber" :validate-event="false" placeholder="智能灯编号" class="normal-width-input" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="外壳编号" prop="shellNumber">
-            <el-input v-model="form.shellNumber" placeholder="外壳编号" class="normal-width-input" />
+            <el-input v-model="form.shellNumber" :validate-event="false" placeholder="外壳编号" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -69,12 +69,12 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="I额定功率/W" prop="beforeGonglv">
-            <el-input v-model="form.beforeGonglv" placeholder="I额定功率/W" class="normal-width-input" />
+            <el-input v-model="form.beforeGonglv" :validate-event="false" placeholder="I额定功率/W" class="normal-width-input" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="II额定功率/W" prop="currentGonglv">
-            <el-input v-model="form.currentGonglv" placeholder="II额定功率/W" class="normal-width-input" />
+            <el-input v-model="form.currentGonglv" :validate-event="false" placeholder="II额定功率/W" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -85,6 +85,7 @@
             :ref="`mac-input-${n}`"
             :key="n"
             v-model="form.macList[n-1]"
+            :validate-event="false"
             size="medium"
             class="mini-width-input"
             @input="onMacInput(form.macList, n-1)"
@@ -99,6 +100,7 @@
             :key="n"
             :ref="`jiaobiaoma-input-${n}`"
             v-model="form.jiaobiaomaList[n-1]"
+            :validate-event="false"
             size="medium"
             class="mini-width-input"
             @input="onMacInput(form.jiaobiaomaList, n-1)"
@@ -113,6 +115,7 @@
             :ref="`panid-input-${n}`"
             :key="n"
             v-model="form.panidList[n-1]"
+            :validate-event="false"
             size="medium"
             class="mini-width-input"
             @input="onMacInput(form.panidList, n-1)"
@@ -123,19 +126,19 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="频道(11-26)" prop="pindao">
-            <el-input v-model="form.pindao" placeholder="请输入" class="normal-width-input" />
+            <el-input v-model="form.pindao" :validate-event="false" placeholder="请输入" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="I路旧灯功率/W" prop="oldkw">
-            <el-input v-model="form.oldkw" placeholder="请输入" class="normal-width-input" />
+            <el-input v-model="form.oldkw" :validate-event="false" placeholder="请输入" class="normal-width-input" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="II路旧灯功率/W" prop="oldkw2">
-            <el-input v-model="form.oldkw2" placeholder="请输入" class="normal-width-input" />
+            <el-input v-model="form.oldkw2" :validate-event="false" placeholder="请输入" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>

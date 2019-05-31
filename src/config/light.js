@@ -108,7 +108,7 @@ export const TableThMapNotApproved = [
   {
     prop: 'createTime',
     label: '录入时间',
-    width: tableCellWidthMap.d
+    width: tableCellWidthMap.f
   },
   {
     prop: 'createUser',

@@ -81,3 +81,25 @@ export function lightDetailsNP(lightId) {
     method: 'get'
   })
 }
+
+// 更新未通过审核的智能灯信息
+export function updateLight(editLightParams) {
+  return request({
+    url: `/api/lightManagement/updateLight`,
+    method: 'post',
+    data: editLightParams
+  })
+}
+
+// 删除未通过审核的智能灯
+export function realdeleteLight(lightId) {
+  debugger
+  return request({
+    url: `/api/lightManagement/realdeleteLight`,
+    method: 'post',
+    data: {
+      name: `${lightId}@`
+    }
+  })
+}
+

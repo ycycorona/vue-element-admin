@@ -1,46 +1,34 @@
 <template>
-  <div class="filter-container form-filter">
+  <div v-loading="loading" class="filter-container form-filter">
     <el-form ref="form" :rules="formRules" :inline="false" :model="form" size="small" class="form" label-width="120px">
       <el-row>
         <el-col :span="12">
-          <common-selector
-            v-model="form.projectId"
-            label="项目名称"
-            :param-opts="projectGroupLightData"
-            label-field="name"
-            val-field="id"
-            prop="projectId"
-            @inputOptObj="projectIdChange"
-          />
+          <el-form-item label="项目名称" prop="projectName">
+            <el-input v-model="form.projectName" :validate-event="false" readonly placeholder="项目名称" class="normal-width-input" />
+          </el-form-item>
         </el-col>
         <el-col :span="12">
-          <common-selector
-            v-model="form.groupId"
-            label="编组名称"
-            :param-opts="lightGroupIdOpts"
-            label-field="name"
-            val-field="id"
-            prop="groupId"
-            @inputOptObj="lightGroupIdChange"
-          />
+          <el-form-item label="编组名称" prop="groupName">
+            <el-input v-model="form.projectName" :validate-event="false" readonly placeholder="编组名称" class="normal-width-input" />
+          </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="智能灯编号" prop="lightNumber">
-            <el-input v-model="form.lightNumber" placeholder="智能灯编号" class="normal-width-input" />
+            <el-input v-model="form.lightNumber" :validate-event="false" :readonly="readonly" placeholder="智能灯编号" class="normal-width-input" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="外壳编号" prop="shellNumber">
-            <el-input v-model="form.shellNumber" placeholder="外壳编号" class="normal-width-input" />
+            <el-input v-model="form.shellNumber" :validate-event="false" :readonly="readonly" placeholder="外壳编号" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="24">
           <el-form-item label="智能灯版本">
-            <span>{{ banben_add }}</span>
+            <span>{{ banben }}</span>
           </el-form-item>
         </el-col>
       </el-row>
@@ -48,6 +36,7 @@
         <el-col :span="12">
           <common-selector
             v-model="form.typeId"
+            :disabled="readonly"
             label="智能灯类型"
             :param-opts="lightTypeOpts"
             label-field="name"
@@ -58,6 +47,7 @@
         <el-col :span="12">
           <common-selector
             v-model="form.anzhuang"
+            :disabled="readonly"
             label="安装状态"
             :param-opts="operateStatusOpts"
             label-field="name"
@@ -69,12 +59,12 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="I额定功率/W" prop="beforeGonglv">
-            <el-input v-model="form.beforeGonglv" placeholder="I额定功率/W" class="normal-width-input" />
+            <el-input v-model="form.beforeGonglv" :validate-event="false" :readonly="readonly" placeholder="I额定功率/W" class="normal-width-input" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="II额定功率/W" prop="currentGonglv">
-            <el-input v-model="form.currentGonglv" placeholder="II额定功率/W" class="normal-width-input" />
+            <el-input v-model="form.currentGonglv" :validate-event="false" :readonly="readonly" placeholder="II额定功率/W" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -85,6 +75,8 @@
             :ref="`mac-input-${n}`"
             :key="n"
             v-model="form.macList[n-1]"
+            :validate-event="false"
+            :readonly="readonly"
             size="medium"
             class="mini-width-input"
             @input="onMacInput(form.macList, n-1)"
@@ -99,6 +91,8 @@
             :key="n"
             :ref="`jiaobiaoma-input-${n}`"
             v-model="form.jiaobiaomaList[n-1]"
+            :validate-event="false"
+            :readonly="readonly"
             size="medium"
             class="mini-width-input"
             @input="onMacInput(form.jiaobiaomaList, n-1)"
@@ -113,6 +107,8 @@
             :ref="`panid-input-${n}`"
             :key="n"
             v-model="form.panidList[n-1]"
+            :validate-event="false"
+            :readonly="readonly"
             size="medium"
             class="mini-width-input"
             @input="onMacInput(form.panidList, n-1)"
@@ -123,19 +119,19 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="频道(11-26)" prop="pindao">
-            <el-input v-model="form.pindao" placeholder="请输入" class="normal-width-input" />
+            <el-input v-model="form.pindao" :validate-event="false" :readonly="readonly" placeholder="请输入" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="I路旧灯功率/W" prop="oldkw">
-            <el-input v-model="form.oldkw" placeholder="请输入" class="normal-width-input" />
+            <el-input v-model="form.oldkw" :validate-event="false" :readonly="readonly" placeholder="请输入" class="normal-width-input" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="II路旧灯功率/W" prop="oldkw2">
-            <el-input v-model="form.oldkw2" placeholder="请输入" class="normal-width-input" />
+            <el-input v-model="form.oldkw2" :validate-event="false" :readonly="readonly" placeholder="请输入" class="normal-width-input" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -143,6 +139,7 @@
         <el-col :span="12">
           <common-selector
             v-model="form.fangxiang"
+            :disabled="readonly"
             label="安装方向"
             :param-opts="directOpts"
             label-field="name"
@@ -166,7 +163,7 @@
               v-if="lat && lng"
               :lng="lng"
               :lat="lat"
-              :is-draggable="true"
+              :is-draggable="!readonly"
               @drag-position="onDragPosition"
             />
           </div>
@@ -213,10 +210,11 @@ export default {
     }
     return {
       form: {
+        lightId: '',
         lightNumber: '',
         shellNumber: '',
-        projectId: '',
-        groupId: '',
+        projectName: '',
+        groupName: '',
         typeId: '',
         anzhuang: '',
         macList: getArray(8, 0),
@@ -270,11 +268,12 @@ export default {
       lightGroupIdOpts: [],
       lat: '',
       lng: '',
-      banben_add: '',
+      banben: '',
       gatewayId: '',
       lightTypeOpts: [],
       operateStatusOpts: operateStatusOpts,
-      directOpts: directOpts
+      directOpts: directOpts,
+      loading: false
     }
   },
   computed: {
@@ -294,24 +293,38 @@ export default {
     // 回显数据
     setData() {
       if (this.detailData) {
-        // const detail = this.detailData
-        // const form = this.form
-        // form.projectId = detail.
+        const detail = this.detailData
+        const form = this.form
+        form.lightId = detail.id
+        form.projectName = detail.projectName
+        form.groupName = detail.groupName
+        form.typeId = detail.typeId
+        form.lightNumber = detail.lightNumber
+        form.shellNumber = detail.shellNumber
+        this.banben = detail.banben
+        form.anzhuang = detail.anzhuang
+        form.beforeGonglv = detail.beforeGonglv
+        form.currentGonglv = detail.currentGonglv
+        form.macList = detail.mac.split(',')
+        form.panidList = detail.panid.split(',')
+        form.jiaobiaomaList = detail.jiaobiaoma.split(',')
+        form.pindao = detail.pindao
+        form.oldkw = detail.oldkw
+        form.oldkw2 = detail.oldkw2
+        form.fangxiang = detail.fangxiang
+        this.lat = detail.lat
+        this.lng = detail.lng
       }
     },
-    getAddLightParams() {
+    getEditLightParams() {
       let obj
       this.$refs['form'].validate((vaild) => {
         if (vaild) {
           const form = this.form
           obj = {
-            projectId: form.projectId,
-            groupId: form.groupId,
-            gatewayId: this.gatewayId,
-            lightNumber: form.lightNumber,
-            shellNumber: form.shellNumber,
+            id: form.lightId,
             typeId: form.typeId,
-            banben: this.banben_add,
+            banben: this.banben,
             anzhuang: form.anzhuang,
             mac: form.macList.join(','),
             jiaobiaoma: form.jiaobiaomaList.join(','),
@@ -344,12 +357,13 @@ export default {
     projectIdChange(obj) {
       this.lightGroupIdOpts = deepClone(obj.sub)
     },
+    // 编组改变
     lightGroupIdChange(obj) {
       // 获取编组定位
       getInfoFromGatewayId(obj.id)
         .then(response => {
           this.gatewayId = response.id
-          this.banben_add = response.banben
+          this.banben = response.banben
           this.lat = response.lat
           this.lng = response.lng
         })
@@ -357,6 +371,7 @@ export default {
     // 获取智能灯类型
     doGetLightType() {
       return new Promise((resolve, reject) => {
+        this.loading = true
         getLightType()
           .then(response => {
             this.lightTypeOpts = response
@@ -364,6 +379,9 @@ export default {
           })
           .catch(err => {
             reject(err)
+          })
+          .finally(() => {
+            this.loading = false
           })
       })
     },
@@ -386,7 +404,9 @@ export default {
     },
     // 获取焦点回调
     onFocusSelect(ref) {
-      this.$refs[ref][0].select()
+      if (!this.readonly) {
+        this.$refs[ref][0].select()
+      }
     },
     // 地图选点回调
     onDragPosition({ lat, lng }) {

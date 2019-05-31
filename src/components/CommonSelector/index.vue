@@ -1,6 +1,6 @@
 <template>
   <el-form-item :label="label" :prop="prop" :label-width="labelWidth">
-    <el-select v-model="input" :placeholder="placeholderText" :disabled="disabled" :clearable="clearable" filterable @change="doChangeSelect">
+    <el-select v-model="input" :placeholder="placeholderText" :readonly="readonly" :disabled="disabled" :clearable="clearable" filterable @change="doChangeSelect">
       <el-option v-for="(item, n) in opts" :key="n" :label="item[labelField||'label']" :value="item[valField||'value']" />
     </el-select>
   </el-form-item>
@@ -64,6 +64,11 @@ export default {
       required: false,
       type: Function,
       default: () => ''
+    },
+    readonly: {
+      required: false,
+      type: Boolean,
+      default: false
     },
     clearable: {
       required: false,

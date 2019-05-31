@@ -12,20 +12,33 @@
       <template slot="paneR">
         <div class="right-container">
           <div class="filter-container form-filter">
+            <!-- 筛选表单 -->
             <el-form :inline="true" :model="form" size="small" class="form">
               <el-form-item label="">
-                <el-button type="primary" size="small">刷新</el-button>
+                <el-button type="primary" size="small" @click="getList">刷新</el-button>
               </el-form-item>
               <el-form-item v-if="selectedType==='notApproved'" label="">
                 <el-button type="primary" size="small" @click="isShowAddLightDialog=true">添加</el-button>
               </el-form-item>
               <el-form-item v-if="selectedType==='notApproved'" label="">
-                <el-button type="primary" size="small">修改</el-button>
+                <el-button type="primary" size="small" @click="doOpenEditLightDialog">修改</el-button>
               </el-form-item>
               <el-form-item label="">
-                <el-button type="primary" size="small">删除</el-button>
+                <el-button type="primary" size="small" @click="doDeleteLight">删除</el-button>
               </el-form-item>
-              <el-form-item label="">
+              <el-form-item v-if="selectedType==='notApproved'" label="">
+                <el-dropdown @command="unLightManCommandClick">
+                  <el-button type="primary" size="small">
+                    更多菜单<i class="el-icon-arrow-down el-icon--right" />
+                  </el-button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item command="changeApproveState">更改审核状态</el-dropdown-item>
+                    <el-dropdown-item command="addFromExcel">导入excel</el-dropdown-item>
+                    <el-dropdown-item command="allapprove">全部审核</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </el-form-item>
+              <el-form-item v-else label="">
                 <el-dropdown @command="lightManCommandClick">
                   <el-button type="primary" size="small">
                     更多菜单<i class="el-icon-arrow-down el-icon--right" />
@@ -373,30 +386,37 @@
       </span>
     </el-dialog>
     <!-- 添加智能灯弹窗 -->
-    <el-dialog :visible.sync="isShowAddLightDialog" title="添加智能灯" width="50%" style="min-width: 300px">
+    <el-dialog
+      :visible.sync="isShowAddLightDialog"
+      title="添加智能灯"
+      :close-on-click-modal="false"
+      width="50%"
+      style="min-width: 300px"
+    >
       <add-light-pop ref="addLightDialogForm" :project-group-light-data="projectGroupLightData" />
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="doAddLight">确定</el-button>
+        <el-button type="primary" @click="doAddLight">保存</el-button>
         <el-button @click="isShowAddLightDialog = false">取消</el-button>
       </span>
     </el-dialog>
     <!-- 编辑未通过审核的智能灯 -->
-    <el-dialog :visible.sync="isShowEditLightDialog" title="编辑智能灯" width="50%" style="min-width: 300px">
+    <el-dialog :visible.sync="isShowEditLightDialog" title="编辑智能灯" :close-on-click-modal="false" width="50%" style="min-width: 300px">
       <edit-light-pop
-        v-if="upLightDetailData"
+        v-if="isShowEditLightDialog"
         ref="editLightDialogForm"
+
         :detail-data="upLightDetailData"
         :project-group-light-data="projectGroupLightData"
       />
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="doEditLight">确定</el-button>
+        <el-button type="primary" @click="doEditLight">保存</el-button>
         <el-button @click="isShowEditLightDialog = false">取消</el-button>
       </span>
     </el-dialog>
     <!-- 查看未审核通过的智能灯 -->
     <el-dialog :visible.sync="isShowReadonlyNotApLightDialog" title="未通过审核智能灯" width="50%" style="min-width: 300px">
       <edit-light-pop
-        v-if="upLightDetailData"
+        v-if="isShowReadonlyNotApLightDialog"
         ref="readonlyLightDialogForm"
         :detail-data="upLightDetailData"
         :readonly="true"
@@ -419,6 +439,7 @@ import gatewayOnline from '@/assets/light/imgs/light-management/gateway-online.p
 import gatewayOutline from '@/assets/light/imgs/light-management/gateway-outline.png'
 import LightLocationMap from './components/LightLocationMap'
 import AddLightPop from './components/AddLightPop'
+import EditLightPop from './components/EditLightPop'
 
 const imgs = {
   lightGb, lightGz, lightDengdai, lightKd, lightGd, gatewayOnline, gatewayOutline
@@ -428,7 +449,8 @@ const imgs = {
 import splitPane from 'vue-splitpane'
 import { getProjectGrouplight } from '@/api/light/common'
 import { lightManagementGroupsInfoList, addLight, lightManagement,
-  lightManagementInfoList, lightDetails, updateOrderPriority, lightDetailsNP } from '@/api/light/light-management'
+  lightManagementInfoList, lightDetails, updateOrderPriority, lightDetailsNP,
+  updateLight, realdeleteLight } from '@/api/light/light-management'
 import ProGroSingleSel from './components/ProGroSingleSel'
 import { TableThMapPro, TableThMapGro, TableThMapNotApproved, OrderTypesOpt } from '@/config/light'
 import Pagination from '@/components/Pagination'
@@ -446,7 +468,8 @@ export default {
   name: 'LightManagement',
 
   components: {
-    ProGroSingleSel, splitPane, Pagination, LightLocationMap, AddLightPop
+    ProGroSingleSel, splitPane, Pagination, LightLocationMap, AddLightPop,
+    EditLightPop
   },
   filters: {
     lightStatus(string) {
@@ -505,8 +528,12 @@ export default {
   watch: {
 
   },
-  created() {
-    this.doGetProjectGroupLight()
+  async created() {
+    await this.doGetProjectGroupLight()
+
+    this.selectedType = 'notApproved'
+    this.reset()
+    this.getList()
   },
   methods: {
     // 获取选择器数据
@@ -524,12 +551,12 @@ export default {
     },
     // 项目、编组单选器的回调
     nodeSelectChange(selectedId, selectedType) {
-      // console.log(selectedId, selectedType)
       this.selectedId = selectedId
       this.selectedType = selectedType
       this.reset()
       this.getList()
     },
+    // 重置表单
     reset() {
       this.form = resetFormFilter()
       this.currentPage = 1
@@ -612,9 +639,12 @@ export default {
     lightManCommandClick(command) {
       console.log(command)
     },
+    unLightManCommandClick(command) {
+      console.log(command)
+    },
     // table中得check回调
     handleSelectionChange(val) {
-      this.checkedTableRow = val
+      this.checkedTableRows = val
     },
     // 动态为表格中的列 添加class
     colClassName(prop) {
@@ -661,7 +691,8 @@ export default {
       this.commonLoading = true
       this.doLightDetailsNP(lightId)
         .then((response) => {
-          console.log(response)
+          this.upLightDetailData = response.details
+          return true
         })
         .then(res => {
           if (res) {
@@ -678,6 +709,7 @@ export default {
       this.doLightDetailsNP(lightId)
         .then(response => {
           this.upLightDetailData = response.details
+          return true
         })
         .then(res => {
           if (res) {
@@ -715,14 +747,77 @@ export default {
     doAddLight() {
       // this.isShowAddLightDialog = false
       const addLightParams = this.$refs['addLightDialogForm'].getAddLightParams()
+      if (!addLightParams) {
+        return
+      }
       console.log(addLightParams)
       addLight(addLightParams)
         .then(response => {
-          console.log(response)
+          // console.log(response)
+          this.isShowAddLightDialog = false
+          this.$message('添加成功')
+          this.getList()
+        })
+        .finally(() => {
+
         })
     },
     doEditLight() {
+      const updateLightparams = this.$refs['editLightDialogForm'].getEditLightParams()
+      if (!updateLightparams) {
+        return
+      }
+      console.log(updateLightparams)
+      updateLight(updateLightparams)
+        .then(response => {
+          // console.log(response)
+          this.isShowEditLightDialog = false
+          this.$message('编辑成功')
+          this.getList()
+        })
+        .finally(() => {
 
+        })
+    },
+    // 删除智能灯
+    doDeleteLight() {
+      this.$confirm('是否删除', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        if (!this.isOneLengthArray(this.checkedTableRows)) { return }
+        realdeleteLight(this.checkedTableRows[0].id)
+          .then(response => {
+            console.log(response)
+            this.$message('删除成功')
+            this.getList()
+          })
+      }).catch(() => {
+
+      })
+    },
+    // 打开编辑智能灯的对话窗
+    doOpenEditLightDialog() {
+      if (!this.isOneLengthArray(this.checkedTableRows)) { return }
+      this.showLightEditDialog(this.checkedTableRows[0].id)
+    },
+    // 是否是长度为一的数组
+    isOneLengthArray(array) {
+      if (array.length === 1) {
+        return true
+      } else if (array.length === 0) {
+        this.$message({
+          message: '请选择一个设备',
+          type: 'warning'
+        })
+      } else if (array.length > 1) {
+        this.$message({
+          message: '请只选择一个设备',
+          type: 'warning'
+        })
+      }
+      return false
     }
   }
 }

@@ -393,7 +393,7 @@
       width="50%"
       style="min-width: 300px"
     >
-      <add-light-pop ref="addLightDialogForm" :project-group-light-data="projectGroupLightData" />
+      <add-light-pop v-if="isShowAddLightDialog" ref="addLightDialogForm" :project-group-light-data="projectGroupLightData" />
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="doAddLight">保存</el-button>
         <el-button @click="isShowAddLightDialog = false">取消</el-button>
@@ -426,6 +426,22 @@
         <el-button @click="isShowReadonlyNotApLightDialog = false">确定</el-button>
       </span>
     </el-dialog>
+    <!-- 上传excel弹窗 -->
+    <el-dialog :visible.sync="isShowUploadDialog" title="上传Excel" width="50%" style="min-width: 300px">
+      <template v-if="isShowUploadDialog">
+        <inline-upload
+          :has-file.sync="hasFile"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xls,application/vnd.ms-excel"
+          :limit="1"
+          file-explain="仅支持上传.xls/.xlsx扩展名文件"
+          @pushFile="pushExcelFile"
+        />
+      </template>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="doUploadExcel">上传</el-button>
+        <el-button @click="isShowUploadDialog = false">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -447,10 +463,11 @@ const imgs = {
 
 // import { deepClone } from '@/utils'
 import splitPane from 'vue-splitpane'
+import InlineUpload from '@/components/InlineUpload'
 import { getProjectGrouplight } from '@/api/light/common'
 import { lightManagementGroupsInfoList, addLight, lightManagement,
   lightManagementInfoList, lightDetails, updateOrderPriority, lightDetailsNP,
-  updateLight, realdeleteLight } from '@/api/light/light-management'
+  updateLight, realdeleteLight, deleteLight, approveLight, approveLightAll } from '@/api/light/light-management'
 import ProGroSingleSel from './components/ProGroSingleSel'
 import { TableThMapPro, TableThMapGro, TableThMapNotApproved, OrderTypesOpt } from '@/config/light'
 import Pagination from '@/components/Pagination'
@@ -469,7 +486,7 @@ export default {
 
   components: {
     ProGroSingleSel, splitPane, Pagination, LightLocationMap, AddLightPop,
-    EditLightPop
+    EditLightPop, InlineUpload
   },
   filters: {
     lightStatus(string) {
@@ -516,10 +533,12 @@ export default {
       isShowDetailDialog: false,
       isShowAddLightDialog: false,
       isShowEditLightDialog: false,
+      isShowUploadDialog: false,
       isShowReadonlyNotApLightDialog: false,
       lightDetailData_1: null,
       lightDetailData_2: null,
-      upLightDetailData: null // 未通过审核路灯详情
+      upLightDetailData: null, // 未通过审核路灯详情
+      hasFile: false
     }
   },
   computed: {
@@ -570,6 +589,7 @@ export default {
     },
     // 获取表格数据
     getList() {
+      this.checkedTableRows = []
       if (this.selectedType === 'pro') {
         this.doLightManagementGroupsInfoList()
       } else if (this.selectedType === 'gro') {
@@ -637,10 +657,18 @@ export default {
     },
     // 智能灯操作选择器回调
     lightManCommandClick(command) {
-      console.log(command)
+      console.log('lightManCommandClick', command)
     },
     unLightManCommandClick(command) {
-      console.log(command)
+      if (command === 'changeApproveState') {
+        this.doApproveLight()
+      } else if (command === 'allapprove') {
+        this.doApproveLightAll()
+      } else if (command === 'addFromExcel') {
+        this.isShowUploadDialog = true
+        // this.doAddFromExcel()
+      }
+      console.log('unLightManCommandClick', command)
     },
     // table中得check回调
     handleSelectionChange(val) {
@@ -779,18 +807,64 @@ export default {
 
         })
     },
-    // 删除智能灯
+    // 删除未审核智能灯
     doDeleteLight() {
+      if (!this.isSelectRows(this.checkedTableRows)) { return }
       this.$confirm('是否删除', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        if (!this.isOneLengthArray(this.checkedTableRows)) { return }
-        realdeleteLight(this.checkedTableRows[0].id)
+        if (this.selectedType === 'notApproved') {
+          realdeleteLight(this.checkedTableRows.map((row) => row.id))
+            .then(response => {
+              console.log(response, '删除未通过审核路灯')
+              this.$message('删除成功')
+              this.getList()
+            })
+        } else {
+          deleteLight(this.checkedTableRows.map((row) => row.id))
+            .then(response => {
+              console.log(response)
+              this.$message('删除成功', '删除通过审核路灯')
+              this.getList()
+            })
+        }
+      }).catch(() => {
+
+      })
+    },
+    // 提交审核智能灯
+    doApproveLight() {
+      if (!this.isSelectRows(this.checkedTableRows)) { return }
+      this.$confirm('确定审核所选智能灯?', '智能灯审核状态', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // console.log(this.checkedTableRows.map((row) => row.id))
+        approveLight(this.checkedTableRows.map((row) => row.id))
+          .then(response => {
+            this.$message('智能灯已提交审核')
+            this.getList()
+          })
+      }).catch(() => {
+
+      })
+    },
+    // 提交审核所有智能灯
+    doApproveLightAll() {
+      // if (!this.isSelectRows(this.checkedTableRows)) { return }
+      this.$confirm('确定审核所有智能灯?', '智能灯审核状态', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // console.log(this.checkedTableRows.map((row) => row.id))
+        approveLightAll()
           .then(response => {
             console.log(response)
-            this.$message('删除成功')
+            this.$message('智能灯已提交审核')
             this.getList()
           })
       }).catch(() => {
@@ -802,8 +876,13 @@ export default {
       if (!this.isOneLengthArray(this.checkedTableRows)) { return }
       this.showLightEditDialog(this.checkedTableRows[0].id)
     },
+    // 上传excel
+    doUploadExcel() {},
+    pushExcelFile(fileList) {
+      console.log(fileList)
+    },
     // 是否是长度为一的数组
-    isOneLengthArray(array) {
+    isSelectOneRow(array) {
       if (array.length === 1) {
         return true
       } else if (array.length === 0) {
@@ -818,6 +897,18 @@ export default {
         })
       }
       return false
+    },
+    // 是否至少选择了一个
+    isSelectRows(array) {
+      if (array.length === 0) {
+        this.$message({
+          message: '请先选择设备',
+          type: 'warning'
+        })
+        return false
+      }
+
+      return true
     }
   }
 }

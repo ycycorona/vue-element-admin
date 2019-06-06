@@ -283,6 +283,7 @@ export default {
 
   },
   async created() {
+    // this.doGetalllightnumandmac()
     await this.doGetLightType()
     this.setData()
     if (this.readonly) {

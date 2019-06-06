@@ -180,13 +180,25 @@
 </template>
 
 <script>
+function macCheck(rule, value, callback) {
+  const myMac = value.join(',')
+  const isHave = this.allMacList.find((currentMac) => {
+    return currentMac === myMac
+  })
+  if (isHave) {
+    callback(new Error('已存在该MAC地址'))
+  } else {
+    callback()
+  }
+}
+
 const operateStatusOpts = [{ id: 1, name: '使用两路' }, { id: 2, name: '使用主路' }, { id: 3, name: '使用辅路' }]
 const directOpts = [{ id: 0, name: '左侧主路' }, { id: 1, name: '右侧主路' }]
 
 import { deepClone } from '@/utils'
 import CommonSelector from '@/components/CommonSelector'
 import LightLocationMap from '../LightLocationMap'
-import { getInfoFromGatewayId, getLightType } from '@/api/light/light-management'
+import { getInfoFromGatewayId, getLightType, getalllightnumandmac } from '@/api/light/light-management'
 export default {
   name: 'AddLightPop',
   components: {
@@ -257,6 +269,10 @@ export default {
         ],
         fangxiang: [
           { required: true, message: '请选择安装方向' }
+        ],
+        macList: [
+          { required: true, message: '请填写MAC地址' },
+          { validator: macCheck.bind(this) }
         ]
       },
       lightGroupIdOpts: [],
@@ -266,7 +282,10 @@ export default {
       gatewayId: '',
       lightTypeOpts: [],
       operateStatusOpts: operateStatusOpts,
-      directOpts: directOpts
+      directOpts: directOpts,
+      allMacList: [],
+      allLightNumberList: []
+
     }
   },
   computed: {
@@ -277,6 +296,7 @@ export default {
   },
   created() {
     this.doGetLightType()
+    this.doGetalllightnumandmac()
   },
   methods: {
     getAddLightParams() {
@@ -337,6 +357,14 @@ export default {
       getLightType()
         .then(response => {
           this.lightTypeOpts = response
+        })
+    },
+    // 获取全部智能灯number和mac地址
+    doGetalllightnumandmac() {
+      getalllightnumandmac()
+        .then(response => {
+          this.allMacList = response.mac
+          this.allLightNumberList = response.number
         })
     },
     // mac地址input自动更正

@@ -92,14 +92,70 @@ export function updateLight(editLightParams) {
 }
 
 // 删除未通过审核的智能灯
-export function realdeleteLight(lightId) {
-  debugger
+export function realdeleteLight(lightIds) {
+  // debugger
   return request({
     url: `/api/lightManagement/realdeleteLight`,
     method: 'post',
     data: {
-      name: `${lightId}@`
+      name: lightIds.join('@') + '@'
     }
   })
 }
 
+// 删除通过审核的智能灯
+export function deleteLight(lightIds) {
+  // debugger
+  return request({
+    url: `/api/lightManagement/deleteLight`,
+    method: 'post',
+    data: {
+      name: lightIds.join('@') + '@'
+    }
+  })
+}
+
+// 通过审核指定智能灯
+export function approveLight(lightIds) {
+  // debugger
+  return request({
+    url: `/api/lightManagement/approve`,
+    method: 'post',
+    data: {
+      ids: lightIds.join('@') + '@'
+    }
+  })
+}
+
+// 通过审核全部智能灯
+export function approveLightAll() {
+  // debugger
+  return request({
+    url: `/api/lightManagement/approve`,
+    method: 'post',
+    data: {
+      ids: 'all'
+    }
+  })
+}
+
+// 获取全部路灯和mac地址
+export function getalllightnumandmac() {
+  return request({
+    url: `/api/lightManagement/getalllightnumandmac`,
+    method: 'get'
+  })
+}
+
+// 从excel导入智能灯
+export function addLightFromUpExcel(formData) {
+  // debugger
+  return request({
+    url: `/api/lightManagement/upexcel`,
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

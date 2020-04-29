@@ -11,21 +11,22 @@ export default function MapLoader() {
       script.onerror = reject
       document.head.appendChild(script)
 
-      const uiScript = document.createElement('script')
-      uiScript.type = 'text/javascript'
-      uiScript.async = false
-      uiScript.src =
-        'https://webapi.amap.com/ui/1.0/main-async.js'
-      uiScript.onerror = reject
-      document.head.appendChild(uiScript)
+      // const uiScript = document.createElement('script')
+      // uiScript.type = 'text/javascript'
+      // uiScript.async = false
+      // uiScript.src =
+      //   'https://webapi.amap.com/ui/1.0/main-async.js'
+      // uiScript.onerror = reject
+      // document.head.appendChild(uiScript)
     }
     window.initAMap = () => {
       // eslint-disable-next-line
-      initAMapUI()
+      //initAMapUI()
       // eslint-disable-next-line
-      AMapUI.loadUI(['overlay/SimpleMarker'], (SimpleMarker) => {
-        resolve(window.AMap)
-      })
+      // AMapUI.loadUI(['overlay/SimpleMarker'], (SimpleMarker) => {
+      //   resolve(window.AMap)
+      // })
+      resolve(window.AMap)
     }
   })
 }

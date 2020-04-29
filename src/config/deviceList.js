@@ -5613,7 +5613,7 @@ export default [{
   'pname': '济南红叶林',
   'cname': '视频监控系统',
   'dtype': '枪式摄像机（含镜头护罩）',
-  'state': null
+  'state': 0
 }, {
   'id': 19698,
   'name': '枪式摄像机',
@@ -5853,7 +5853,7 @@ export default [{
   'pname': '济南红叶林',
   'cname': '视频监控系统',
   'dtype': '枪式摄像机（含镜头护罩）',
-  'state': null
+  'state': 0
 }, {
   'id': 19708,
   'name': '枪式摄像机',
